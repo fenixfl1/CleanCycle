@@ -20,4 +20,5 @@ from core.settings import PATH_BASE
 urlpatterns = [
     path(f"{PATH_BASE}admin/", admin.site.urls),
     path("", include("users.urls")),
+    path("", include("posts.urls")),
 ]
