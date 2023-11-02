@@ -16,15 +16,22 @@ class LoginUserSerializer(BaseModelSerializer):
         token, _ = Token.objects.get_or_create(user=user)
         return token.key
 
-    def _get_expires_in(self, user: User) -> int:
+    def _get_expiration(self) -> int:
         return datetime.datetime.now() + datetime.timedelta(days=10)
 
     def get_session_cookie(self, user: User) -> dict:
         return {
             "TOKEN": self._get_token(user),
-            "EXPIRES_IN": self._get_expires_in(user),
+            "EXPIRES_IN": self._get_expiration(),
         }
 
     class Meta:
         model = User
-        fields = ("username", "email", "is_superuser", "avatar", "session_cookie")
+        fields = (
+            "user_id",
+            "username",
+            "email",
+            "is_superuser",
+            "avatar",
+            "session_cookie",
+        )

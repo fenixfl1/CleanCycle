@@ -35,6 +35,9 @@ class RecyclePointType(BaseModel):
     recycle_point = models.ForeignKey(RecyclingPoints, on_delete=models.CASCADE)
     recycle_type = models.ForeignKey(RecyclesTypes, on_delete=models.CASCADE)
 
+    class Meta:
+        db_table = "RECYCLE_POINT_TYPE"
+
 
 class Routes(BaseModel):
     route_id = models.AutoField(primary_key=True)
@@ -98,3 +101,35 @@ class Reviews(BaseModel):
 
     class Meta:
         db_table = "REVIEWS"
+
+
+class Cities(BaseModel):
+    """
+    This model represents the cities where the recycling points are located
+    `TABLE NAME:` CITIES
+    """
+
+    city_id = models.CharField(primary_key=True, max_length=2)
+    name = models.CharField(max_length=100, null=False, blank=False)
+    lnt = models.CharField(max_length=100, null=True, blank=True)
+    lat = models.CharField(max_length=100, null=True, blank=True)
+
+    class Meta:
+        db_table = "CITIES"
+        ordering = ["name"]
+        verbose_name = "City"
+
+
+class CiclyPointsXCities(BaseModel):
+    """
+    This model represents the relationship between the recycling points and the cities
+    `TABLE NAME:` CICLY_POINTS_X_CITIES
+    """
+
+    recycle_point = models.ForeignKey(RecyclingPoints, on_delete=models.CASCADE)
+    city = models.ForeignKey(Cities, on_delete=models.CASCADE)
+
+    class Meta:
+        db_table = "CICLY_POINTS_X_CITIES"
+        ordering = ["city"]
+        verbose_name = "Cicly Point X City"
