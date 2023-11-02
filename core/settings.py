@@ -11,6 +11,10 @@ https://docs.djangoproject.com/en/4.1/ref/settings/
 """
 
 from pathlib import Path
+import os
+
+import django_heroku
+import dj_database_url
 
 from core.local import (
     DB_ENGINE,
@@ -150,3 +154,8 @@ DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
 PATH_BASE = "api/v1.0.0/"
 AUTH_USER_MODEL = "users.User"
+
+STATIC_ROOT = os.path.join(BASE_DIR, "staticfiles")
+STATIC_DIRS = (os.path.join(BASE_DIR, "static"),)
+
+django_heroku.settings(locals())
