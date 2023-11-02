@@ -2,7 +2,6 @@
 This file contains the common models that will be inherited by all other models
 """
 from datetime import datetime
-from typing import Self, Type
 
 from django.db import models
 from django.utils import timezone
@@ -34,7 +33,7 @@ class BaseModel(models.Model):
         abstract = True
 
     @classmethod
-    def create(cls: Self, request, **kwargs) -> Self:
+    def create(cls: models.Model, request, **kwargs):
         try:
             data = dict_key_to_lower(kwargs)
             user = data.pop("user", None)
@@ -48,7 +47,9 @@ class BaseModel(models.Model):
             raise APIException(e) from e
 
     @classmethod
-    def create_many(cls: Self, request, data_list: list[dict]) -> list[Self]:
+    def create_many(
+        cls: models.Model, request, data_list: list[dict]
+    ) -> list[models.Model]:
         try:
             created_objects = []
             objects_to_create = []
