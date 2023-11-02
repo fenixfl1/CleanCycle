@@ -1,1 +1,1 @@
-web gunicorn core.wsgi:application --bind-file
+web gunicorn core.wsgi:application
