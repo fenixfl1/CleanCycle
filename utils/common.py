@@ -47,9 +47,7 @@ class BaseModel(models.Model):
             raise APIException(e) from e
 
     @classmethod
-    def create_many(
-        cls: models.Model, request, data_list: list[dict]
-    ) -> list[models.Model]:
+    def create_many(cls: models.Model, request, data_list: list[dict]) -> list:
         try:
             created_objects = []
             objects_to_create = []
