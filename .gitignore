@@ -1,6 +1,42 @@
-# excule /core/local.py
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Local development settings
+settings/local.py
+
+# Logs
+logs/
+*.log
+
+# Static files
+staticfiles/
+
+# Media files
+media/
+
+# Database
+db.sqlite3
+
+# Other Django-specific files
+*.secret_key
+
+# env folder
+env/
+
+# VSCode
+.vscode/
+
+# all .env files
+.env*
+
+# Otros archivos y directorios generados
+*.swp
+.DS_Store
 
 local.py
 
-.evn.*
-.env
+# exclude all inside migrations folder except __init__.py
+*/migrations/
+!*/migrations/__init__.py
