@@ -54,7 +54,7 @@ def login_required(view_func):
     return _wrapped_view_func
 
 
-def dict_values_to_upper(data: dict or list[dict]) -> dict or list[dict]:
+def dict_values_to_upper(data: dict or list) -> dict or list:
     """
     This function is used to convert the value of the dictionary to upper case
     """
@@ -74,7 +74,7 @@ def dict_values_to_upper(data: dict or list[dict]) -> dict or list[dict]:
         raise APIException(f"{e}. Raised in 'dict_values_to_upper()' function") from e
 
 
-def dict_key_to_lower(data: dict or list[dict]) -> dict or list[dict]:
+def dict_key_to_lower(data: dict or list) -> dict or list:
     """
     This function is used to convert the key of the dictionary to lower case
     """
