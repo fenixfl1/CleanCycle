@@ -153,7 +153,7 @@ STATIC_URL = "static/"
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
 PATH_BASE = "api/v1.0.0/"
-AUTH_USER_MODEL = "users.User"
+# AUTH_USER_MODEL = "users.User"
 
 STATIC_ROOT = os.path.join(BASE_DIR, "staticfiles")
 STATIC_DIRS = (os.path.join(BASE_DIR, "static"),)
