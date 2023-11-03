@@ -36,7 +36,3 @@ env/
 .DS_Store
 
 local.py
-
-# exclude all inside migrations folder except __init__.py
-*/migrations/
-!*/migrations/__init__.py
