@@ -16,15 +16,9 @@ import os
 import django_heroku
 import dj_database_url
 
-from core.local import (
-    DB_ENGINE,
-    DB_HOST,
-    DB_NAME,
-    DB_PASSWORD,
-    DB_PORT,
-    DB_USER,
-    ALLOWED_ORIGINS,
-)
+from dotenv import load_dotenv
+
+load_dotenv(".env.local")
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -43,7 +37,10 @@ ALLOWED_HOSTS = ["*"]
 
 CORS_ORIGIN_ALLOW_ALL = True
 
-CORS_ALLOWED_ORIGINS = ALLOWED_ORIGINS
+CORS_ALLOWED_ORIGINS = [
+    "https://clean-cycle-client-fjf7holsa-fenixfl1.vercel.app",
+    "http://localhost:3006",
+]
 
 
 # Application definition
@@ -99,11 +96,18 @@ WSGI_APPLICATION = "core.wsgi.application"
 # Database
 # https://docs.djangoproject.com/en/4.1/ref/settings/#databases
 
+DB_USERNAME = os.getenv("DB_USERNAME")
+DB_PASSWORD = os.getenv("DB_PASSWORD")
+DB_HOST = os.getenv("DB_HOST")
+DB_PORT = os.getenv("DB_PORT")
+DB_NAME = os.getenv("DB_NAME")
+DB_ENGINE = os.getenv("DB_ENGINE")
+
 DATABASES = {
     "default": {
         "ENGINE": DB_ENGINE,
         "NAME": DB_NAME,
-        "USER": DB_USER,
+        "USER": DB_USERNAME,
         "PASSWORD": DB_PASSWORD,
         "HOST": DB_HOST,
         "PORT": DB_PORT,
