@@ -24,6 +24,9 @@ class UnprotectedViewSet(ViewSet):
     Unprotected Posts viewset for GET operations
     """
 
+    permission_classes = [AllowAny]
+    pagination_class = PaginationSerializer
+
     @viewException
     def get_posts_by_id(self, request, post_id):
         posts = Posts.objects.filter(post_id=post_id).first()
@@ -39,6 +42,15 @@ class UnprotectedViewSet(ViewSet):
     @viewException
     def get_posts_list(self, request):
         posts = Posts.objects.filter(Q(state=True) & Q(is_approved=True)).all()
+        serializer = PostSerializer(posts, many=True)
+
+        return Response({"data": serializer.data})
+
+    @viewException
+    def get_posts(self, request):
+        state = request.data.get("state", None)
+
+        posts = Posts.objects.filter(Q(state=state) & Q(is_approved=True)).all()
         serializer = PostSerializer(posts, many=True)
 
         return Response({"data": serializer.data})
