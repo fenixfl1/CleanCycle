@@ -2,7 +2,11 @@ from django.forms.models import model_to_dict
 from django.contrib.auth import get_user_model
 from django.db.models import Q
 
-from rest_framework.decorators import api_view, permission_classes
+from rest_framework.decorators import (
+    api_view,
+    permission_classes,
+    authentication_classes,
+)
 from rest_framework.exceptions import APIException
 from rest_framework.viewsets import ViewSet
 from rest_framework.response import Response
@@ -15,113 +19,111 @@ from utils.hlepers import viewException
 from utils.serializers import PaginationSerializer
 
 
-@api_view(["GET"])
-@permission_classes([AllowAny])
-@viewException
-def get_posts_by_id(request, post_id):
-    posts = Posts.objects.filter(post_id=post_id).first()
+class UnprotectedViewSet(ViewSet):
+    """
+    Unprotected Posts viewset for GET operations
+    """
 
-    if not posts:
-        raise APIException(f"Article with id '{post_id}' not found")
+    @viewException
+    def get_posts_by_id(self, request, post_id):
+        posts = Posts.objects.filter(post_id=post_id).first()
 
-    serializer = PostSerializer(posts, data=model_to_dict(posts))
-    serializer.is_valid(raise_exception=True)
+        if not posts:
+            raise APIException(f"Article with id '{post_id}' not found")
 
-    return Response({"data": serializer.data})
+        serializer = PostSerializer(posts, data=model_to_dict(posts))
+        serializer.is_valid(raise_exception=True)
 
+        return Response({"data": serializer.data})
 
-@api_view(["GET"])
-@permission_classes([AllowAny])
-@viewException
-def get_posts_list(request):
-    posts = Posts.objects.filter(Q(state=True) & Q(is_approved=True)).all()
-    serializer = PostSerializer(posts, many=True)
+    @viewException
+    def get_posts_list(self, request):
+        posts = Posts.objects.filter(Q(state=True) & Q(is_approved=True)).all()
+        serializer = PostSerializer(posts, many=True)
 
-    return Response({"data": serializer.data})
-
-
-@api_view(["POST"])
-@permission_classes([IsAuthenticated])
-@viewException
-def create_post(request):
-    data = request.data
-
-    data["author"] = request.user
-
-    post = Posts.create(request, **data)
-
-    serializer = PostSerializer(post, data=model_to_dict(post))
-    serializer.is_valid(raise_exception=True)
-
-    return Response(
-        {
-            "message": f"Article with id '{post.post_id}' was created successfuly.",
-            "data": serializer.data,
-        }
-    )
+        return Response({"data": serializer.data})
 
 
-@api_view(["PUT"])
-@permission_classes([IsAuthenticated])
-@viewException
-def update_post(request):
-    pass
+class ProtectedViews(ViewSet):
+    """
+    Protected Posts viewset for CRUD operations
+    """
 
+    permission_classes = [IsAuthenticated]
+    authentication_classes = [TokenAuthentication]
+    pagination_class = PaginationSerializer
 
-@api_view(["POST"])
-@permission_classes([IsAuthenticated])
-@viewException
-def comment_post(request):
-    data = request.data
+    @viewException
+    def create_post(self, request):
+        data = request.data
 
-    if not (username := data.get("USERNAME", None)):
-        raise APIException("'USERNAME' is required")
+        data["author"] = request.user
 
-    if not data.get("COMMENT", None):
-        raise APIException("'COMMENT' is required")
+        post = Posts.create(request, **data)
 
-    post = Posts.objects.get(post_id=data.get("POST_ID", None))
-    user = get_user_model().objects.get(username=username)
+        serializer = PostSerializer(post, data=model_to_dict(post))
+        serializer.is_valid(raise_exception=True)
 
-    if not post:
-        raise APIException("'POST_ID' is required")
+        return Response(
+            {
+                "message": f"Article with id '{post.post_id}' was created successfuly.",
+                "data": serializer.data,
+            }
+        )
 
-    data["POST_ID"] = post
-    data["USERNAME"] = user
+    @viewException
+    def comment_post(self, request):
+        data = request.data
 
-    Comments.create(request, **data)
+        if not (username := data.get("USERNAME", None)):
+            raise APIException("'USERNAME' is required")
 
-    return Response({"message": "Comment add successfuly."})
+        if not data.get("COMMENT", None):
+            raise APIException("'COMMENT' is required")
 
+        post = Posts.objects.get(post_id=data.get("POST_ID", None))
+        user = get_user_model().objects.get(username=username)
 
-@api_view(["POST"])
-@permission_classes([IsAuthenticated])
-@viewException
-def like_post(request):
-    data = request.data
+        if not post:
+            raise APIException("'POST_ID' is required")
 
-    if not (post_id := data.get("POST_ID", None)):
-        raise APIException("POST_ID is required")
+        data["POST_ID"] = post
+        data["USERNAME"] = user
 
-    if not (username := data.get("USERNAME", None)):
-        raise APIException("'USERNAME' is required")
+        Comments.create(request, **data)
 
-    post = Posts.objects.get(post_id=post_id)
-    user = get_user_model().objects.get(username=username)
+        return Response({"message": "Comment add successfuly."})
 
-    if not user:
-        raise APIException("User not found")
+    @viewException
+    def like_post(self, request):
+        data = request.data
 
-    if not post:
-        raise APIException("Post not found")
+        if not (post_id := data.get("POST_ID", None)):
+            raise APIException("POST_ID is required")
 
-    data["USERNAME"] = user
-    data["POST_ID"] = post
-    data["USER"] = user
+        if not (username := data.get("USERNAME", None)):
+            raise APIException("'USERNAME' is required")
 
-    Likes.create(request, **data)
+        post = Posts.objects.get(post_id=post_id)
+        user = get_user_model().objects.get(username=username)
 
-    serializer = PostSerializer(post, data=model_to_dict(post))
-    serializer.is_valid(raise_exception=True)
+        if not user:
+            raise APIException("User not found")
 
-    return Response({"data": serializer.data["LIKED_BY"]})
+        if not post:
+            raise APIException("Post not found")
+
+        data["USERNAME"] = user
+        data["POST_ID"] = post
+        data["USER"] = user
+
+        Likes.create(request, **data)
+
+        serializer = PostSerializer(post, data=model_to_dict(post))
+        serializer.is_valid(raise_exception=True)
+
+        return Response({"data": serializer.data["LIKED_BY"]})
+
+    @viewException
+    def update_post(self, request):
+        pass
