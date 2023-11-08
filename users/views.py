@@ -53,6 +53,7 @@ class AuthenticationViewSet(ViewSet):
             username=username,
             email=email,
             password=password,
+            avatar=request.data.get("AVATAR"),
         )
 
         serializer = LoginUserSerializer(user, data=model_to_dict(user))

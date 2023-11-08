@@ -8,6 +8,8 @@ BASE_POST_URL = f"{PATH_BASE}posts/"
 get_posts_by_id = views.UnprotectedViewSet.as_view({"get": "get_posts_by_id"})
 get_posts_list = views.UnprotectedViewSet.as_view({"get": "get_posts_list"})
 get_posts = views.UnprotectedViewSet.as_view({"post": "get_posts"})
+get_post_comments = views.UnprotectedViewSet.as_view({"post": "get_post_comments"})
+get_post_likes = views.UnprotectedViewSet.as_view({"post": "get_post_likes"})
 
 create_post = views.ProtectedViews.as_view({"post": "create_post"})
 update_post = views.ProtectedViews.as_view({"put": "update_post"})
@@ -22,6 +24,8 @@ urlpatterns = [
     path(f"{BASE_POST_URL}comment_post", comment_post),
     path(f"{BASE_POST_URL}like_post", like_post),
     path(f"{BASE_POST_URL}get_posts", get_posts),
+    path(f"{BASE_POST_URL}get_post_comments", get_post_comments),
+    path(f"{BASE_POST_URL}get_post_likes", get_post_likes),
 ]
 
 urlpatterns = format_suffix_patterns(urlpatterns)

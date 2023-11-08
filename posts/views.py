@@ -14,7 +14,7 @@ from rest_framework.authentication import TokenAuthentication
 from rest_framework.permissions import AllowAny, IsAuthenticated
 
 from posts.models import Posts, Likes, Comments
-from posts.serializers import PostSerializer
+from posts.serializers import CommentsSerializer, PostSerializer
 from utils.hlepers import viewException
 from utils.serializers import PaginationSerializer
 
@@ -48,12 +48,48 @@ class UnprotectedViewSet(ViewSet):
 
     @viewException
     def get_posts(self, request):
-        state = request.data.get("state", None)
+        state = request.data.get("state", True)
 
         posts = Posts.objects.filter(Q(state=state) & Q(is_approved=True)).all()
         serializer = PostSerializer(posts, many=True)
 
         return Response({"data": serializer.data})
+
+    @viewException
+    def get_post_comments(self, request):
+        post_id = request.data.get("POST_ID", None)
+
+        if not post_id:
+            raise APIException("POST_ID is required")
+
+        post = Posts.objects.filter(post_id=post_id).first()
+
+        if not post:
+            raise APIException("Post not found")
+
+        comments = Comments.objects.filter(post_id=post).all()
+        serializer = CommentsSerializer(comments, many=True)
+
+        return Response({"data": serializer.data})
+
+    @viewException
+    def get_post_likes(self, request):
+        post_id = request.data.get("POST_ID", None)
+
+        if not post_id:
+            raise APIException("POST_ID is required")
+
+        post = Posts.objects.filter(post_id=post_id).first()
+
+        if not post:
+            raise APIException("Post not found")
+
+        likes = [
+            like.username.username
+            for like in Likes.objects.filter(post_id=post_id).all()
+        ]
+
+        return Response({"data": likes})
 
 
 class ProtectedViews(ViewSet):
@@ -102,6 +138,10 @@ class ProtectedViews(ViewSet):
         data["POST_ID"] = post
         data["USERNAME"] = user
 
+        print("*" * 75)
+        print(f"{data}")
+        print("*" * 75)
+
         Comments.create(request, **data)
 
         return Response({"message": "Comment add successfuly."})
@@ -109,6 +149,8 @@ class ProtectedViews(ViewSet):
     @viewException
     def like_post(self, request):
         data = request.data
+
+        option = data.pop("OPTION", None)
 
         if not (post_id := data.get("POST_ID", None)):
             raise APIException("POST_ID is required")
@@ -129,7 +171,15 @@ class ProtectedViews(ViewSet):
         data["POST_ID"] = post
         data["USER"] = user
 
-        Likes.create(request, **data)
+        like = Likes.objects.filter(
+            Q(username=data["USERNAME"]) & Q(post_id=post)
+        ).first()
+
+        if option == 0 and not like:
+            Likes.create(request, **data)
+        else:
+            state = 0 if like.state else 1
+            Likes.update(request, like, state=state)
 
         serializer = PostSerializer(post, data=model_to_dict(post))
         serializer.is_valid(raise_exception=True)

@@ -1,3 +1,6 @@
+from django.contrib.auth import get_user_model
+from django.db.models import Q
+
 from rest_framework import serializers
 
 from posts.models import Posts, Comments, Images, PostImages, Likes
@@ -27,14 +30,19 @@ class PostSerializer(BaseModelSerializer):
     avatar = serializers.SerializerMethodField()
     liked_by = serializers.SerializerMethodField()
     comments = serializers.SerializerMethodField()
+    about_author = serializers.SerializerMethodField()
 
     @excep
-    def get_comments(self, article: Posts) -> list:
-        comments = Comments.objects.filter(post_id=article.post_id).all()
-        return CommentsSerializer(comments, many=True, read_only=True).data
+    def get_about_author(self, post: Posts) -> str:
+        user = get_user_model().objects.filter(username=post.author).first()
+        return user.about
 
-    def get_liked_by(self, article: Posts) -> list:
-        likes = Likes.objects.filter(post_id=article.post_id).values_list(
+    @excep
+    def get_comments(self, post: Posts) -> list:
+        return Comments.objects.filter(post_id=post.post_id).count()
+
+    def get_liked_by(self, post: Posts) -> list:
+        likes = Likes.objects.filter(Q(post_id=post.post_id) & Q(state=1)).values_list(
             "username__username", flat=True
         )
 
@@ -55,4 +63,5 @@ class PostSerializer(BaseModelSerializer):
             "liked_by",
             "comments",
             "front_page",
+            "about_author",
         )
