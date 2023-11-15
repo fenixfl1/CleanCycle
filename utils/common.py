@@ -2,6 +2,7 @@
 This file contains the common models that will be inherited by all other models
 """
 from datetime import datetime
+from typing import Type
 
 from django.db import models
 from django.utils import timezone
@@ -10,6 +11,8 @@ from django.contrib.auth import get_user_model
 from rest_framework.exceptions import APIException
 
 from utils.hlepers import dict_key_to_lower
+
+Model = Type["Model"]
 
 
 class BaseModel(models.Model):
@@ -33,7 +36,7 @@ class BaseModel(models.Model):
         abstract = True
 
     @classmethod
-    def create(cls: models.Model, request, **kwargs):
+    def create(cls: Model, request, **kwargs) -> Model:
         try:
             data = dict_key_to_lower(kwargs)
             user = data.pop("user", None)
@@ -47,7 +50,7 @@ class BaseModel(models.Model):
             raise APIException(e) from e
 
     @classmethod
-    def create_many(cls: models.Model, request, data_list: list) -> list:
+    def create_many(cls: Model, request, data_list: list) -> list[Model]:
         try:
             created_objects = []
             objects_to_create = []
@@ -72,7 +75,7 @@ class BaseModel(models.Model):
             raise APIException(e) from e
 
     @classmethod
-    def update(cls, request, instance, **kwargs):
+    def update(cls: Model, request, instance, **kwargs) -> Model:
         try:
             data = dict_key_to_lower(kwargs)
             data["updated_at"] = timezone.now()

@@ -60,7 +60,19 @@ class User(AbstractBaseUser):
     def __repr__(self) -> str:
         return f"{self.username}"
 
+    def has_module_perms(self, app_label):
+        """
+        Does the user have permissions to view the app `app_label`?
+        """
+        return self.is_superuser
+
+    def has_perm(self, perm, obj=None):
+        """
+        Does the user have a specific permission?
+        """
+        return self.is_superuser
+
     class Meta:
-        db_table = "USERS"
+        db_table = "users"
         ordering = ["username"]
         verbose_name = "User"

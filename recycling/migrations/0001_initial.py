@@ -6,7 +6,6 @@ import django.db.models.deletion
 
 
 class Migration(migrations.Migration):
-
     initial = True
 
     dependencies = [
@@ -15,109 +14,231 @@ class Migration(migrations.Migration):
 
     operations = [
         migrations.CreateModel(
-            name='RecyclePointType',
+            name="RecyclePointType",
             fields=[
-                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('created_at', models.DateTimeField(auto_now_add=True)),
-                ('updated_at', models.DateTimeField(auto_now=True)),
-                ('state', models.CharField(default='A', help_text='A=Active, I=Inactive', max_length=1)),
-                ('created_by', models.ForeignKey(db_column='created_by', on_delete=django.db.models.deletion.CASCADE, related_name='%(app_label)s_%(class)s_created_by', to=settings.AUTH_USER_MODEL, to_field='username')),
+                (
+                    "id",
+                    models.BigAutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
+                ("created_at", models.DateTimeField(auto_now_add=True)),
+                ("updated_at", models.DateTimeField(auto_now=True)),
+                (
+                    "state",
+                    models.CharField(
+                        default="A", help_text="A=Active, I=Inactive", max_length=1
+                    ),
+                ),
+                (
+                    "created_by",
+                    models.ForeignKey(
+                        db_column="created_by",
+                        on_delete=django.db.models.deletion.CASCADE,
+                        related_name="%(app_label)s_%(class)s_created_by",
+                        to=settings.AUTH_USER_MODEL,
+                        to_field="username",
+                    ),
+                ),
             ],
             options={
-                'abstract': False,
+                "abstract": False,
             },
         ),
         migrations.CreateModel(
-            name='RecyclesTypes',
+            name="RecyclesTypes",
             fields=[
-                ('created_at', models.DateTimeField(auto_now_add=True)),
-                ('updated_at', models.DateTimeField(auto_now=True)),
-                ('state', models.CharField(default='A', help_text='A=Active, I=Inactive', max_length=1)),
-                ('recycle_type_id', models.AutoField(primary_key=True, serialize=False)),
-                ('name', models.CharField(max_length=100)),
-                ('description', models.CharField(max_length=500)),
-                ('created_by', models.ForeignKey(db_column='created_by', on_delete=django.db.models.deletion.CASCADE, related_name='%(app_label)s_%(class)s_created_by', to=settings.AUTH_USER_MODEL, to_field='username')),
+                ("created_at", models.DateTimeField(auto_now_add=True)),
+                ("updated_at", models.DateTimeField(auto_now=True)),
+                (
+                    "state",
+                    models.CharField(
+                        default="A", help_text="A=Active, I=Inactive", max_length=1
+                    ),
+                ),
+                (
+                    "recycle_type_id",
+                    models.AutoField(primary_key=True, serialize=False),
+                ),
+                ("name", models.CharField(max_length=100)),
+                ("description", models.CharField(max_length=500)),
+                (
+                    "created_by",
+                    models.ForeignKey(
+                        db_column="created_by",
+                        on_delete=django.db.models.deletion.CASCADE,
+                        related_name="%(app_label)s_%(class)s_created_by",
+                        to=settings.AUTH_USER_MODEL,
+                        to_field="username",
+                    ),
+                ),
             ],
             options={
-                'db_table': 'RECYCLE_TYPES',
+                "db_table": "recycle_types",
             },
         ),
         migrations.CreateModel(
-            name='Routes',
+            name="Routes",
             fields=[
-                ('created_at', models.DateTimeField(auto_now_add=True)),
-                ('updated_at', models.DateTimeField(auto_now=True)),
-                ('state', models.CharField(default='A', help_text='A=Active, I=Inactive', max_length=1)),
-                ('route_id', models.AutoField(primary_key=True, serialize=False)),
-                ('route_name', models.CharField(max_length=100)),
-                ('latitude', models.CharField(max_length=100)),
-                ('longitude', models.CharField(max_length=100)),
-                ('reference_point', models.CharField(max_length=100)),
-                ('created_by', models.ForeignKey(db_column='created_by', on_delete=django.db.models.deletion.CASCADE, related_name='%(app_label)s_%(class)s_created_by', to=settings.AUTH_USER_MODEL, to_field='username')),
+                ("created_at", models.DateTimeField(auto_now_add=True)),
+                ("updated_at", models.DateTimeField(auto_now=True)),
+                (
+                    "state",
+                    models.CharField(
+                        default="A", help_text="A=Active, I=Inactive", max_length=1
+                    ),
+                ),
+                ("route_id", models.AutoField(primary_key=True, serialize=False)),
+                ("route_name", models.CharField(max_length=100)),
+                ("latitude", models.CharField(max_length=100)),
+                ("longitude", models.CharField(max_length=100)),
+                ("reference_point", models.CharField(max_length=100)),
+                (
+                    "created_by",
+                    models.ForeignKey(
+                        db_column="created_by",
+                        on_delete=django.db.models.deletion.CASCADE,
+                        related_name="%(app_label)s_%(class)s_created_by",
+                        to=settings.AUTH_USER_MODEL,
+                        to_field="username",
+                    ),
+                ),
             ],
             options={
-                'db_table': 'ROUTES',
+                "db_table": "routes",
             },
         ),
         migrations.CreateModel(
-            name='Trucks',
+            name="Trucks",
             fields=[
-                ('created_at', models.DateTimeField(auto_now_add=True)),
-                ('updated_at', models.DateTimeField(auto_now=True)),
-                ('state', models.CharField(default='A', help_text='A=Active, I=Inactive', max_length=1)),
-                ('truck_id', models.AutoField(primary_key=True, serialize=False)),
-                ('truck_name', models.CharField(max_length=100)),
-                ('created_by', models.ForeignKey(db_column='created_by', on_delete=django.db.models.deletion.CASCADE, related_name='%(app_label)s_%(class)s_created_by', to=settings.AUTH_USER_MODEL, to_field='username')),
+                ("created_at", models.DateTimeField(auto_now_add=True)),
+                ("updated_at", models.DateTimeField(auto_now=True)),
+                (
+                    "state",
+                    models.CharField(
+                        default="A", help_text="A=Active, I=Inactive", max_length=1
+                    ),
+                ),
+                ("truck_id", models.AutoField(primary_key=True, serialize=False)),
+                ("truck_name", models.CharField(max_length=100)),
+                (
+                    "created_by",
+                    models.ForeignKey(
+                        db_column="created_by",
+                        on_delete=django.db.models.deletion.CASCADE,
+                        related_name="%(app_label)s_%(class)s_created_by",
+                        to=settings.AUTH_USER_MODEL,
+                        to_field="username",
+                    ),
+                ),
             ],
             options={
-                'db_table': 'TRUCKS',
+                "db_table": "trucks",
             },
         ),
         migrations.CreateModel(
-            name='Schedule',
+            name="Schedule",
             fields=[
-                ('created_at', models.DateTimeField(auto_now_add=True)),
-                ('updated_at', models.DateTimeField(auto_now=True)),
-                ('state', models.CharField(default='A', help_text='A=Active, I=Inactive', max_length=1)),
-                ('schedule_id', models.AutoField(primary_key=True, serialize=False)),
-                ('schedule_date', models.DateField()),
-                ('title', models.CharField(max_length=100)),
-                ('description', models.CharField(max_length=250)),
-                ('created_by', models.ForeignKey(db_column='created_by', on_delete=django.db.models.deletion.CASCADE, related_name='%(app_label)s_%(class)s_created_by', to=settings.AUTH_USER_MODEL, to_field='username')),
-                ('route', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to='recycling.routes')),
-                ('truck', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to='recycling.trucks')),
+                ("created_at", models.DateTimeField(auto_now_add=True)),
+                ("updated_at", models.DateTimeField(auto_now=True)),
+                (
+                    "state",
+                    models.CharField(
+                        default="A", help_text="A=Active, I=Inactive", max_length=1
+                    ),
+                ),
+                ("schedule_id", models.AutoField(primary_key=True, serialize=False)),
+                ("schedule_date", models.DateField()),
+                ("title", models.CharField(max_length=100)),
+                ("description", models.CharField(max_length=250)),
+                (
+                    "created_by",
+                    models.ForeignKey(
+                        db_column="created_by",
+                        on_delete=django.db.models.deletion.CASCADE,
+                        related_name="%(app_label)s_%(class)s_created_by",
+                        to=settings.AUTH_USER_MODEL,
+                        to_field="username",
+                    ),
+                ),
+                (
+                    "route",
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.CASCADE,
+                        to="recycling.routes",
+                    ),
+                ),
+                (
+                    "truck",
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.CASCADE,
+                        to="recycling.trucks",
+                    ),
+                ),
             ],
             options={
-                'db_table': 'SCHEDULES',
+                "db_table": "schedules",
             },
         ),
         migrations.CreateModel(
-            name='RecyclingPoints',
+            name="RecyclingPoints",
             fields=[
-                ('created_at', models.DateTimeField(auto_now_add=True)),
-                ('updated_at', models.DateTimeField(auto_now=True)),
-                ('state', models.CharField(default='A', help_text='A=Active, I=Inactive', max_length=1)),
-                ('recycle_point_id', models.AutoField(primary_key=True, serialize=False)),
-                ('location_name', models.CharField(max_length=100)),
-                ('location_address', models.CharField(max_length=100)),
-                ('latitude', models.CharField(max_length=100)),
-                ('longitude', models.CharField(max_length=100)),
-                ('description', models.CharField(max_length=250)),
-                ('created_by', models.ForeignKey(db_column='created_by', on_delete=django.db.models.deletion.CASCADE, related_name='%(app_label)s_%(class)s_created_by', to=settings.AUTH_USER_MODEL, to_field='username')),
-                ('recycle_types', models.ManyToManyField(through='recycling.RecyclePointType', to='recycling.recyclestypes')),
+                ("created_at", models.DateTimeField(auto_now_add=True)),
+                ("updated_at", models.DateTimeField(auto_now=True)),
+                (
+                    "state",
+                    models.CharField(
+                        default="A", help_text="A=Active, I=Inactive", max_length=1
+                    ),
+                ),
+                (
+                    "recycle_point_id",
+                    models.AutoField(primary_key=True, serialize=False),
+                ),
+                ("location_name", models.CharField(max_length=100)),
+                ("location_address", models.CharField(max_length=100)),
+                ("latitude", models.CharField(max_length=100)),
+                ("longitude", models.CharField(max_length=100)),
+                ("description", models.CharField(max_length=250)),
+                (
+                    "created_by",
+                    models.ForeignKey(
+                        db_column="created_by",
+                        on_delete=django.db.models.deletion.CASCADE,
+                        related_name="%(app_label)s_%(class)s_created_by",
+                        to=settings.AUTH_USER_MODEL,
+                        to_field="username",
+                    ),
+                ),
+                (
+                    "recycle_types",
+                    models.ManyToManyField(
+                        through="recycling.RecyclePointType",
+                        to="recycling.recyclestypes",
+                    ),
+                ),
             ],
             options={
-                'db_table': 'RECYCLING_POINTS',
+                "db_table": "recycling_points",
             },
         ),
         migrations.AddField(
-            model_name='recyclepointtype',
-            name='recycle_point',
-            field=models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to='recycling.recyclingpoints'),
+            model_name="recyclepointtype",
+            name="recycle_point",
+            field=models.ForeignKey(
+                on_delete=django.db.models.deletion.CASCADE,
+                to="recycling.recyclingpoints",
+            ),
         ),
         migrations.AddField(
-            model_name='recyclepointtype',
-            name='recycle_type',
-            field=models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to='recycling.recyclestypes'),
+            model_name="recyclepointtype",
+            name="recycle_type",
+            field=models.ForeignKey(
+                on_delete=django.db.models.deletion.CASCADE,
+                to="recycling.recyclestypes",
+            ),
         ),
     ]

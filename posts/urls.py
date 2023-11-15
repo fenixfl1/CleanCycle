@@ -1,9 +1,6 @@
 from django.urls import path
 from rest_framework.urlpatterns import format_suffix_patterns
 from posts import views
-from core.settings import PATH_BASE
-
-BASE_POST_URL = f"{PATH_BASE}posts/"
 
 get_posts_by_id = views.UnprotectedViewSet.as_view({"get": "get_posts_by_id"})
 get_posts_list = views.UnprotectedViewSet.as_view({"get": "get_posts_list"})
@@ -17,15 +14,15 @@ comment_post = views.ProtectedViews.as_view({"post": "comment_post"})
 like_post = views.ProtectedViews.as_view({"post": "like_post"})
 
 urlpatterns = [
-    path(f"{BASE_POST_URL}get_posts_by_id/<int:post_id>", get_posts_by_id),
-    path(f"{BASE_POST_URL}get_posts_list", get_posts_list),
-    path(f"{BASE_POST_URL}create_post", create_post),
-    path(f"{BASE_POST_URL}update_post", update_post),
-    path(f"{BASE_POST_URL}comment_post", comment_post),
-    path(f"{BASE_POST_URL}like_post", like_post),
-    path(f"{BASE_POST_URL}get_posts", get_posts),
-    path(f"{BASE_POST_URL}get_post_comments", get_post_comments),
-    path(f"{BASE_POST_URL}get_post_likes", get_post_likes),
+    path("get_posts_by_id/<int:post_id>", get_posts_by_id),
+    path("get_posts_list", get_posts_list),
+    path("create_post", create_post),
+    path("update_post", update_post),
+    path("comment_post", comment_post),
+    path("like_post", like_post),
+    path("get_posts", get_posts),
+    path("get_post_comments", get_post_comments),
+    path("get_post_likes", get_post_likes),
 ]
 
 urlpatterns = format_suffix_patterns(urlpatterns)

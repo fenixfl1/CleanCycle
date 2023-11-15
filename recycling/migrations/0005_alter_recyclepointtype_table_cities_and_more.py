@@ -6,50 +6,44 @@ import django.db.models.deletion
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
         migrations.swappable_dependency(settings.AUTH_USER_MODEL),
-        ('recycling', '0004_alter_recyclepointtype_state_and_more'),
+        ("recycling", "0004_alter_recyclepointtype_state_and_more"),
     ]
 
     operations = [
         migrations.AlterModelTable(
-            name='recyclepointtype',
-            table='RECYCLE_POINT_TYPE',
+            name="recyclepointtype",
+            table="recycle_point_type",
         ),
         migrations.CreateModel(
-            name='Cities',
+            name="Cities",
             fields=[
-                ('created_at', models.DateTimeField(auto_now_add=True)),
-                ('updated_at', models.DateTimeField(auto_now=True)),
-                ('state', models.BooleanField(default=True, max_length=1)),
-                ('city_id', models.CharField(max_length=2, primary_key=True, serialize=False)),
-                ('name', models.CharField(max_length=100)),
-                ('lnt', models.CharField(blank=True, max_length=100, null=True)),
-                ('lat', models.CharField(blank=True, max_length=100, null=True)),
-                ('created_by', models.ForeignKey(db_column='created_by', on_delete=django.db.models.deletion.CASCADE, related_name='%(app_label)s_%(class)s_created_by', to=settings.AUTH_USER_MODEL, to_field='username')),
+                ("created_at", models.DateTimeField(auto_now_add=True)),
+                ("updated_at", models.DateTimeField(auto_now=True)),
+                ("state", models.BooleanField(default=True, max_length=1)),
+                (
+                    "city_id",
+                    models.CharField(max_length=2, primary_key=True, serialize=False),
+                ),
+                ("name", models.CharField(max_length=100)),
+                ("lnt", models.CharField(blank=True, max_length=100, null=True)),
+                ("lat", models.CharField(blank=True, max_length=100, null=True)),
+                (
+                    "created_by",
+                    models.ForeignKey(
+                        db_column="created_by",
+                        on_delete=django.db.models.deletion.CASCADE,
+                        related_name="%(app_label)s_%(class)s_created_by",
+                        to=settings.AUTH_USER_MODEL,
+                        to_field="username",
+                    ),
+                ),
             ],
             options={
-                'verbose_name': 'City',
-                'db_table': 'CITIES',
-                'ordering': ['name'],
-            },
-        ),
-        migrations.CreateModel(
-            name='CiclyPointsXCities',
-            fields=[
-                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('created_at', models.DateTimeField(auto_now_add=True)),
-                ('updated_at', models.DateTimeField(auto_now=True)),
-                ('state', models.BooleanField(default=True, max_length=1)),
-                ('city', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to='recycling.cities')),
-                ('created_by', models.ForeignKey(db_column='created_by', on_delete=django.db.models.deletion.CASCADE, related_name='%(app_label)s_%(class)s_created_by', to=settings.AUTH_USER_MODEL, to_field='username')),
-                ('recycle_point', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to='recycling.recyclingpoints')),
-            ],
-            options={
-                'verbose_name': 'Cicly Point X City',
-                'db_table': 'CICLY_POINTS_X_CITIES',
-                'ordering': ['city'],
+                "verbose_name": "City",
+                "db_table": "cities",
+                "ordering": ["name"],
             },
         ),
     ]

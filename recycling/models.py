@@ -12,7 +12,24 @@ class RecyclesTypes(BaseModel):
         return f"{self.name}"
 
     class Meta:
-        db_table = "RECYCLE_TYPES"
+        db_table = "recycle_types"
+
+
+class Cities(BaseModel):
+    """
+    This model represents the cities where the recycling points are located
+    `TABLE NAME:` CITIES
+    """
+
+    city_id = models.CharField(primary_key=True, max_length=2)
+    name = models.CharField(max_length=100, null=False, blank=False)
+    lnt = models.CharField(max_length=100, null=True, blank=True)
+    lat = models.CharField(max_length=100, null=True, blank=True)
+
+    class Meta:
+        db_table = "cities"
+        ordering = ["name"]
+        verbose_name = "City"
 
 
 class RecyclingPoints(BaseModel):
@@ -23,12 +40,20 @@ class RecyclingPoints(BaseModel):
     longitude = models.CharField(max_length=100)
     description = models.CharField(max_length=250)
     recycle_types = models.ManyToManyField(RecyclesTypes, through="RecyclePointType")
+    city = models.ForeignKey(
+        Cities,
+        on_delete=models.CASCADE,
+        null=True,
+        blank=True,
+        db_column="city_id",
+        to_field="city_id",
+    )
 
     def __repr__(self) -> str:
         return f"{self.location_name}"
 
     class Meta:
-        db_table = "RECYCLING_POINTS"
+        db_table = "recycling_points"
 
 
 class RecyclePointType(BaseModel):
@@ -36,7 +61,7 @@ class RecyclePointType(BaseModel):
     recycle_type = models.ForeignKey(RecyclesTypes, on_delete=models.CASCADE)
 
     class Meta:
-        db_table = "RECYCLE_POINT_TYPE"
+        db_table = "recycle_point_type"
 
 
 class Routes(BaseModel):
@@ -50,7 +75,7 @@ class Routes(BaseModel):
         return f"{self.route_name}"
 
     class Meta:
-        db_table = "ROUTES"
+        db_table = "routes"
 
 
 class Trucks(BaseModel):
@@ -61,7 +86,7 @@ class Trucks(BaseModel):
         return f"{self.truck_name}"
 
     class Meta:
-        db_table = "TRUCKS"
+        db_table = "trucks"
 
 
 class Schedule(BaseModel):
@@ -76,7 +101,7 @@ class Schedule(BaseModel):
         return f"{self.schedule_date}"
 
     class Meta:
-        db_table = "SCHEDULES"
+        db_table = "schedule"
 
 
 class Reviews(BaseModel):
@@ -100,36 +125,4 @@ class Reviews(BaseModel):
         return f"{self.rating}"
 
     class Meta:
-        db_table = "REVIEWS"
-
-
-class Cities(BaseModel):
-    """
-    This model represents the cities where the recycling points are located
-    `TABLE NAME:` CITIES
-    """
-
-    city_id = models.CharField(primary_key=True, max_length=2)
-    name = models.CharField(max_length=100, null=False, blank=False)
-    lnt = models.CharField(max_length=100, null=True, blank=True)
-    lat = models.CharField(max_length=100, null=True, blank=True)
-
-    class Meta:
-        db_table = "CITIES"
-        ordering = ["name"]
-        verbose_name = "City"
-
-
-class CiclyPointsXCities(BaseModel):
-    """
-    This model represents the relationship between the recycling points and the cities
-    `TABLE NAME:` CICLY_POINTS_X_CITIES
-    """
-
-    recycle_point = models.ForeignKey(RecyclingPoints, on_delete=models.CASCADE)
-    city = models.ForeignKey(Cities, on_delete=models.CASCADE)
-
-    class Meta:
-        db_table = "CICLY_POINTS_X_CITIES"
-        ordering = ["city"]
-        verbose_name = "Cicly Point X City"
+        db_table = "reviews"
