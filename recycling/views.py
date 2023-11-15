@@ -27,7 +27,6 @@ class PublicViewSet(ViewSet):
     """
 
     permission_classes = [AllowAny]
-    authentication_classes = [TokenAuthentication]
     pagination_class = PaginationSerializer
 
     @viewException
