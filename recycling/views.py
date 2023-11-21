@@ -61,6 +61,31 @@ class PublicViewSet(ViewSet):
 
         return Response({"data": serializer.data})
 
+    @viewException
+    def get_cycling_point_by_city(self, request, city_id):
+        points = RecyclingPoints.objects.filter(city=city_id).all()
+
+        serializer = RecyclingPointsSerializer(points, many=True)
+
+        return Response({"data": serializer.data})
+
+    @viewException
+    def get_routes(self, request):
+        condition = request.data.get("condition", None)
+
+        filter = Q(state=True)
+
+        if condition is not None:
+            filter = reduce(
+                and_, [Q(**{key: value}) for key, value in condition.items()]
+            )
+
+        routes = Routes.objects.filter(filter).all()
+
+        serializer = RecyclingPointsSerializer(routes, many=True)
+
+        return Response({"data": serializer.data})
+
 
 class PostsViewSet(ViewSet):
     """

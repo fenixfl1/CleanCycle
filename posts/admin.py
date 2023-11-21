@@ -1,9 +1,10 @@
 from django.contrib import admin
 
 from posts.models import Posts, Comments
+from utils.common import BaseModelAdmin
 
 
-class PostsAdmin(admin.ModelAdmin):
+class PostsAdmin(BaseModelAdmin):
     list_display = ("post_id", "title", "is_approved", "author")
     list_editable = ("is_approved",)
 
@@ -11,7 +12,7 @@ class PostsAdmin(admin.ModelAdmin):
         return obj.author.username
 
 
-class CommentsAdmin(admin.ModelAdmin):
+class CommentsAdmin(BaseModelAdmin):
     list_display = ("comment_id", "post", "comment", "username", "state")
     list_editable = ("state",)
 

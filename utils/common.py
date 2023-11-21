@@ -4,9 +4,14 @@ This file contains the common models that will be inherited by all other models
 from datetime import datetime
 from typing import Type
 
+from django import forms
+from django.urls import reverse
 from django.db import models
 from django.utils import timezone
+from django.utils.html import format_html
+from django.contrib import admin
 from django.contrib.auth import get_user_model
+from django.contrib.admin.sites import AdminSite
 
 from rest_framework.exceptions import APIException
 
@@ -91,3 +96,27 @@ class BaseModel(models.Model):
 
         except Exception as e:
             raise APIException(str(e)) from e
+
+
+class BaseModelAdmin(admin.ModelAdmin):
+    def __init__(
+        self, model: type, admin_site: AdminSite | None, state_field="state"
+    ) -> None:
+        self.list_display = self.list_display + (
+            state_field,
+            "edit_link",
+        )
+        self.list_editable = self.list_editable + (state_field,)
+        super().__init__(model, admin_site)
+
+    def edit_link(self, obj):
+        # Generar un enlace a la página de edición del objeto
+        if obj.pk:
+            url = reverse(
+                "admin:%s_%s_change" % (obj._meta.app_label, obj._meta.model_name),
+                args=[obj.pk],
+            )
+            return format_html('<a href="{}">Editar</a>', url)
+        return ""
+
+    edit_link.short_description = "Editar"

@@ -1,70 +1,13 @@
-from django import forms
 from django.contrib import admin
-from django.contrib.auth import password_validation
-from django.contrib.auth.admin import UserAdmin
-from django.contrib.auth.base_user import AbstractBaseUser
+from django.contrib.admin.sites import AdminSite
 from django.utils.translation import gettext_lazy as _
-from django.contrib.auth.forms import (
-    AuthenticationForm,
-    UserCreationForm,
-    UserChangeForm,
-)
 
+from users.forms import CustomCreationForm, CustomUserChangeForm, UstomAuthForm
 from users.models import User
+from utils.common import BaseModelAdmin
 
 
-class UstomAuthForm(AuthenticationForm):
-    def confirm_login_allowed(self, user: AbstractBaseUser):
-        if not user.state:
-            raise forms.ValidationError(
-                self.error_messages["inactive"],
-                code="inactive",
-            )
-
-    fields = ("username", "password")
-
-
-class CustomCreationForm(UserCreationForm):
-    password1 = forms.CharField(
-        label=_("Password"),
-        strip=False,
-        widget=forms.PasswordInput(attrs={"autocomplete": "new-password"}),
-        help_text=password_validation.password_validators_help_text_html(),
-    )
-    password2 = forms.CharField(
-        label=_("Password confirmation"),
-        widget=forms.PasswordInput(attrs={"autocomplete": "new-password"}),
-        strip=False,
-        help_text=_("Enter the same password as before, for verification."),
-    )
-
-    class Meta(UserCreationForm):
-        model = User
-        fields = (
-            "email",
-            "username",
-            "avatar",
-            "about",
-            "is_staff",
-            "is_superuser",
-        )
-
-
-class CustomUserChangeForm(UserChangeForm):
-    class Meta:
-        model = User
-        fields = (
-            "email",
-            "username",
-            "avatar",
-            "about",
-            "is_staff",
-            "is_superuser",
-            "password",
-        )
-
-
-class CustomUserAdmin(UserAdmin):
+class CustomUserAdmin(BaseModelAdmin):
     """
     Custom user admin model for the admin site
     """
@@ -78,21 +21,16 @@ class CustomUserAdmin(UserAdmin):
     display_name = "username"
     list_filter = ("is_staff", "is_superuser", "is_active")
     list_display = (
+        "render_avatar",
         "username",
         "email",
-        "avatar",
         "about",
         "is_staff",
         "is_superuser",
         "is_active",
     )
 
-    exclude = (
-        "password",
-        "created_at",
-        "updated_at",
-        "created_by",
-    )
+    # exclude = ("password", +"created_at", "updated_at", "created_by")
 
     filter_horizontal = ()
 
@@ -111,7 +49,7 @@ class CustomUserAdmin(UserAdmin):
                 )
             },
         ),
-        ("Important dates", {"fields": ("last_login", "created_at")}),
+        ("Important dates", {"fields": ("last_login",)}),
     )
 
     list_editable = ("is_staff", "is_superuser", "is_active")
@@ -121,6 +59,11 @@ class CustomUserAdmin(UserAdmin):
 
     def has_permission(self, request, _obj=None):
         return request.user.is_authenticated
+
+    def __init__(
+        self, model: type, admin_site: AdminSite | None, state_field="is_active"
+    ) -> None:
+        super().__init__(model, admin_site, state_field)
 
 
 admin.site.register(User, CustomUserAdmin)

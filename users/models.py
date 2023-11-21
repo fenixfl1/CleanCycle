@@ -3,6 +3,7 @@ Custom user model
 """
 
 from django.db import models
+from django.utils.html import format_html
 from django.contrib.auth.models import AbstractBaseUser, BaseUserManager
 
 
@@ -71,6 +72,17 @@ class User(AbstractBaseUser):
         Does the user have a specific permission?
         """
         return self.is_superuser
+
+    def render_avatar(self):
+        if self.avatar:
+            return format_html(
+                '<img src="{}" width="60" height="60" style="border-radius: 50%;" />'.format(
+                    self.avatar
+                )
+            )
+        return ""
+
+    render_avatar.short_description = "Avatar"
 
     class Meta:
         db_table = "users"

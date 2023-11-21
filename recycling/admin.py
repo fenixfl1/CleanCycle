@@ -1,5 +1,8 @@
+from django.urls import reverse
+from django.utils.html import format_html
 from django.contrib import admin
 from django.contrib.admin.sites import AdminSite
+from recycling.forms import RecyclingPointsForm
 
 from recycling.models import (
     RecyclesTypes,
@@ -10,10 +13,11 @@ from recycling.models import (
     Reviews,
     Cities,
 )
+from utils.common import BaseModelAdmin
 
 
-class RecyclesTypesAdmin(admin.ModelAdmin):
-    list_display = ("recycle_type_id", "recycle_type_name")
+class RecyclesTypesAdmin(BaseModelAdmin):
+    list_display = ("recycle_type_id", "name", "description")
 
     def recycle_type_id(self, obj: RecyclesTypes):
         return obj.recycle_type_id
@@ -22,25 +26,30 @@ class RecyclesTypesAdmin(admin.ModelAdmin):
         return obj.recycle_type_name
 
 
-class RecycleTypeInline(
-    admin.TabularInline
-):  # Puedes usar StackedInline si prefieres un diseño diferente
+class RecycleTypeInline(admin.TabularInline):
     model = RecyclingPoints.recycle_types.through
 
+    def formfield_for_foreignkey(self, db_field, request, **kwargs):
+        if db_field.name == "recycle_type":
+            kwargs["queryset"] = RecyclesTypes.objects.filter(state=True)
+        return super().formfield_for_foreignkey(db_field, request, **kwargs)
 
-class RecyclingPointsAdmin(admin.ModelAdmin):
+
+class RecyclingPointsAdmin(BaseModelAdmin):
+    form = RecyclingPointsForm
     inlines = [RecycleTypeInline]
     list_display = (
+        "normalize_cover",
         "location_name",
         "location_address",
+        "phone",
+        "email",
         "latitude",
         "longitude",
         "city",
         "state",
     )
     search_fields = ["location_name", "location_address", "city__city_name"]
-    list_editable = ("state",)
-    raw_id_fields = ("city",)
     fieldsets = (
         (
             "Location Information",
@@ -49,9 +58,12 @@ class RecyclingPointsAdmin(admin.ModelAdmin):
                     "created_by",
                     "location_name",
                     "location_address",
+                    "phone",
+                    "email",
                     "latitude",
                     "longitude",
                     "city",
+                    "cover",
                     "state",
                 )
             },
@@ -60,16 +72,13 @@ class RecyclingPointsAdmin(admin.ModelAdmin):
     )
 
     def formfield_for_foreignkey(self, db_field, request, **kwargs):
-        print("*" * 75)
-        print(f"{db_field.name}")
-        print("*" * 75)
         if db_field.name == "city":
-            kwargs["queryset"] = Cities.objects.all()
+            kwargs["queryset"] = Cities.objects.filter(state=True)
             kwargs["label"] = "City"
         return super().formfield_for_foreignkey(db_field, request, **kwargs)
 
 
-class RoutesAdmin(admin.ModelAdmin):
+class RoutesAdmin(BaseModelAdmin):
     list_display = (
         "route_id",
         "route_name",
@@ -81,11 +90,11 @@ class RoutesAdmin(admin.ModelAdmin):
     )
 
 
-class TrucksAdmin(admin.ModelAdmin):
+class TrucksAdmin(BaseModelAdmin):
     list_display = ("truck_id", "truck_name", "state", "created_by")
 
 
-class ScheduleAdmin(admin.ModelAdmin):
+class ScheduleAdmin(BaseModelAdmin):
     list_display = (
         "schedule_id",
         "schedule_date",
@@ -98,7 +107,7 @@ class ScheduleAdmin(admin.ModelAdmin):
     )
 
 
-class ReviewsAdmin(admin.ModelAdmin):
+class ReviewsAdmin(BaseModelAdmin):
     list_display = (
         "review_id",
         "recycle_point",
@@ -109,9 +118,8 @@ class ReviewsAdmin(admin.ModelAdmin):
     )
 
 
-class CitiesAdmin(admin.ModelAdmin):
+class CitiesAdmin(BaseModelAdmin):
     list_display = ("city_id", "name", "lnt", "lat", "state", "created_by")
-    list_editable = ("state",)
 
 
 admin.site.register(RecyclesTypes, RecyclesTypesAdmin)

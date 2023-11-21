@@ -2,18 +2,36 @@ from rest_framework import serializers
 from utils.hlepers import excep
 from utils.serializers import BaseModelSerializer
 
-from recycling.models import Cities, RecyclesTypes, RecyclingPoints, Routes
+from recycling.models import (
+    Cities,
+    RecyclePointType,
+    RecyclesTypes,
+    RecyclingPoints,
+    Routes,
+)
 
 
 class CitySerializer(BaseModelSerializer):
     cant_recycling_points = serializers.SerializerMethodField()
+    recycling_points = serializers.SerializerMethodField()
+
+    def get_recycling_points(self, city: Cities) -> list:
+        points = RecyclingPoints.objects.filter(city=city)
+        return RecyclingPointsSerializer(points, many=True).data
 
     def get_cant_recycling_points(self, city: Cities) -> int:
         return RecyclingPoints.objects.filter(city=city).count()
 
     class Meta:
         model = Cities
-        fields = ("city_id", "name", "lnt", "lat", "cant_recycling_points")
+        fields = (
+            "city_id",
+            "name",
+            "lnt",
+            "lat",
+            "recycling_points",
+            "cant_recycling_points",
+        )
 
 
 class RecyclesTypesSerializer(BaseModelSerializer):
@@ -23,7 +41,17 @@ class RecyclesTypesSerializer(BaseModelSerializer):
 
 
 class RecyclingPointsSerializer(BaseModelSerializer):
-    city = CitySerializer(read_only=True)
+    city = serializers.SerializerMethodField()
+    recycling_types = serializers.SerializerMethodField()
+    # schedules = serializers.SerializerMethodField()
+
+    def get_recycling_types(self, point: RecyclingPoints) -> list:
+        types = RecyclePointType.objects.filter(recycle_point=point).all()
+        types = RecyclesTypes.objects.filter(recycle_type_id__in=types)
+        return [name for name in types.values_list("name", flat=True)]
+
+    def get_city(self, instance):
+        return Cities.objects.get(city_id=instance.city.city_id).name
 
     class Meta:
         model = RecyclingPoints
@@ -34,8 +62,12 @@ class RecyclingPointsSerializer(BaseModelSerializer):
             "latitude",
             "longitude",
             "description",
+            "phone",
+            "email",
             "state",
+            "cover",
             "city",
+            "recycling_types",
         )
 
 
