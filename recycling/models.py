@@ -82,6 +82,9 @@ class RecyclePointType(BaseModel):
     recycle_point = models.ForeignKey(RecyclingPoints, on_delete=models.CASCADE)
     recycle_type = models.ForeignKey(RecyclesTypes, on_delete=models.CASCADE)
 
+    def __str__(self) -> str:
+        return f"{self.recycle_point.location_name} - {self.recycle_type.name}"
+
     class Meta:
         db_table = "recycle_point_type"
 

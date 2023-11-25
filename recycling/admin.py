@@ -1,10 +1,14 @@
+from itertools import groupby
+from operator import attrgetter
+
 from django.urls import reverse
 from django.utils.html import format_html
 from django.contrib import admin
 from django.contrib.admin.sites import AdminSite
-from recycling.forms import RecyclingPointsForm
 
+from recycling.forms import RecyclingPointsForm
 from recycling.models import (
+    RecyclePointType,
     RecyclesTypes,
     RecyclingPoints,
     Routes,
@@ -47,7 +51,6 @@ class RecyclingPointsAdmin(BaseModelAdmin):
         "latitude",
         "longitude",
         "city",
-        "state",
     )
     search_fields = ["location_name", "location_address", "city__city_name"]
     fieldsets = (
@@ -85,13 +88,12 @@ class RoutesAdmin(BaseModelAdmin):
         "latitude",
         "longitude",
         "reference_point",
-        "state",
         "created_by",
     )
 
 
 class TrucksAdmin(BaseModelAdmin):
-    list_display = ("truck_id", "truck_name", "state", "created_by")
+    list_display = ("truck_id", "truck_name", "created_by")
 
 
 class ScheduleAdmin(BaseModelAdmin):
@@ -102,7 +104,6 @@ class ScheduleAdmin(BaseModelAdmin):
         "truck",
         "title",
         "description",
-        "state",
         "created_by",
     )
 
@@ -113,13 +114,17 @@ class ReviewsAdmin(BaseModelAdmin):
         "recycle_point",
         "rating",
         "comment",
-        "state",
         "created_by",
     )
 
 
 class CitiesAdmin(BaseModelAdmin):
-    list_display = ("city_id", "name", "lnt", "lat", "state", "created_by")
+    list_display = ("city_id", "name", "lnt", "lat", "created_by")
+
+
+class RecyclePointTypeAdmin(BaseModelAdmin):
+    list_display = ("recycle_point", "recycle_type", "created_by")
+    list_filter = ("recycle_point", "recycle_type")
 
 
 admin.site.register(RecyclesTypes, RecyclesTypesAdmin)
@@ -129,3 +134,4 @@ admin.site.register(Trucks, TrucksAdmin)
 admin.site.register(Schedule, ScheduleAdmin)
 admin.site.register(Reviews, ReviewsAdmin)
 admin.site.register(Cities, CitiesAdmin)
+admin.site.register(RecyclePointType, RecyclePointTypeAdmin)

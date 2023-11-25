@@ -1,3 +1,4 @@
+from django.db.models import Q
 from rest_framework import serializers
 from utils.hlepers import excep
 from utils.serializers import BaseModelSerializer
@@ -46,9 +47,8 @@ class RecyclingPointsSerializer(BaseModelSerializer):
     # schedules = serializers.SerializerMethodField()
 
     def get_recycling_types(self, point: RecyclingPoints) -> list:
-        types = RecyclePointType.objects.filter(recycle_point=point).all()
-        types = RecyclesTypes.objects.filter(recycle_type_id__in=types)
-        return [name for name in types.values_list("name", flat=True)]
+        types = RecyclePointType.objects.filter(recycle_point=point)
+        return [name for name in types.values_list("recycle_type__name", flat=True)]
 
     def get_city(self, instance):
         return Cities.objects.get(city_id=instance.city.city_id).name
