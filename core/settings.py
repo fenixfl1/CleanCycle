@@ -12,7 +12,7 @@ load_dotenv(".env.local")
 BASE_DIR = Path(__file__).resolve().parent.parent
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = "django-insecure-^t%+v9!q@hv02&b2y(c%l0qf18v*o1)=0kruxtjr+p86&f1*r-"
+SECRET_KEY = os.getenv("SECRET_KEY")
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
@@ -43,6 +43,7 @@ INSTALLED_APPS = [
     "recycling",
     "posts",
     "utils",
+    "exchanges",
 ]
 
 MIDDLEWARE = [

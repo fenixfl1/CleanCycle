@@ -1,11 +1,52 @@
 import datetime
 
 from rest_framework import serializers
-from utils.hlepers import excep
+from posts.models import Posts
+from utils.helpers import excep
 from utils.serializers import BaseModelSerializer
 from rest_framework.authtoken.models import Token
 
 from users.models import User
+
+
+class UserSerializer(BaseModelSerializer):
+    followers = serializers.SerializerMethodField()
+    following = serializers.SerializerMethodField()
+    posts = serializers.SerializerMethodField()
+
+    def get_followers(self, user: User) -> list[str]:
+        return [follower.username for follower in user.followers.all()]
+
+    def get_following(self, user: User) -> list[str]:
+        return [following.username for following in user.following.all()]
+
+    def get_posts(self, user: User) -> list[str]:
+        return [post.title for post in Posts.objects.filter(author=user.username)]
+
+    class Meta:
+        model = User
+        fields = (
+            "user_id",
+            "full_name",
+            "username",
+            "email",
+            "about",
+            "is_superuser",
+            "avatar",
+            "followers",
+            "following",
+            "posts",
+        )
+
+
+class FollowUserSerializer(BaseModelSerializer):
+    class Meta:
+        model = User
+        fields = (
+            "user_id",
+            "username",
+            "avatar",
+        )
 
 
 class LoginUserSerializer(BaseModelSerializer):

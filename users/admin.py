@@ -22,6 +22,7 @@ class CustomUserAdmin(BaseModelAdmin):
     list_filter = ("is_staff", "is_superuser", "is_active")
     list_display = (
         "render_avatar",
+        "full_name",
         "username",
         "email",
         "about",

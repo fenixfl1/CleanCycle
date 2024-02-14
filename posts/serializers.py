@@ -3,8 +3,8 @@ from django.db.models import Q
 
 from rest_framework import serializers
 
-from posts.models import Posts, Comments, Images, PostImages, Likes
-from utils.hlepers import excep
+from posts.models import Posts, Comments, Images, PostImages, Likes, SavedPosts
+from utils.helpers import excep
 from utils.serializers import BaseModelSerializer
 
 
@@ -31,6 +31,7 @@ class PostSerializer(BaseModelSerializer):
     liked_by = serializers.SerializerMethodField()
     comments = serializers.SerializerMethodField()
     about_author = serializers.SerializerMethodField()
+    saved = serializers.SerializerMethodField()
 
     @excep
     def get_about_author(self, post: Posts) -> str:
@@ -51,17 +52,26 @@ class PostSerializer(BaseModelSerializer):
     def get_avatar(self, article: Posts) -> str:
         return article.author.avatar
 
+    @excep
+    def get_saved(self, post: Posts) -> bool:
+        user = self.context.get("request").user
+        return SavedPosts.objects.filter(
+            Q(post_id=post.post_id) & Q(username=user)
+        ).exists()
+
     class Meta:
         model = Posts
         fields = (
-            "post_id",
-            "title",
-            "content",
+            "about_author",
             "author",
             "avatar",
-            "created_at",
-            "liked_by",
             "comments",
+            "content",
+            "created_at",
             "front_page",
-            "about_author",
+            "liked_by",
+            "post_id",
+            "preview_text",
+            "saved",
+            "title",
         )

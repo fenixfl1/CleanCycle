@@ -13,9 +13,9 @@ from rest_framework.response import Response
 from rest_framework.authentication import TokenAuthentication
 from rest_framework.permissions import AllowAny, IsAuthenticated
 
-from posts.models import Posts, Likes, Comments
+from posts.models import BloquedAuthor, Posts, Likes, Comments, SavedPosts
 from posts.serializers import CommentsSerializer, PostSerializer
-from utils.hlepers import viewException
+from utils.helpers import viewException
 from utils.serializers import PaginationSerializer
 
 
@@ -34,15 +34,30 @@ class UnprotectedViewSet(ViewSet):
         if not posts:
             raise APIException(f"Article with id '{post_id}' not found")
 
-        serializer = PostSerializer(posts, data=model_to_dict(posts))
+        serializer = PostSerializer(
+            posts, data=model_to_dict(posts), context={"request": request}
+        )
         serializer.is_valid(raise_exception=True)
 
         return Response({"data": serializer.data})
 
     @viewException
-    def get_posts_list(self, request):
-        posts = Posts.objects.filter(Q(state=True) & Q(is_approved=True)).all()
-        serializer = PostSerializer(posts, many=True)
+    def get_posts_list(self, request, username=None):
+
+        # get posts where the author is not the same as the username and the author is not bloqued (represented in the BloquedAuthor model)
+        posts = Posts.objects.filter(
+            ~Q(author__username=username) & Q(is_approved=True)
+        ).all()
+
+        bloqued = BloquedAuthor.objects.filter(
+            Q(username=username) & Q(state=True)
+        ).all()
+
+        if bloqued:
+            bloqued = [author.author.username for author in bloqued]
+            posts = [post for post in posts if post.author.username not in bloqued]
+
+        serializer = PostSerializer(posts, many=True, context={"request": request})
 
         return Response({"data": serializer.data})
 
@@ -51,7 +66,7 @@ class UnprotectedViewSet(ViewSet):
         state = request.data.get("state", True)
 
         posts = Posts.objects.filter(Q(state=state) & Q(is_approved=True)).all()
-        serializer = PostSerializer(posts, many=True)
+        serializer = PostSerializer(posts, many=True, context={"request": request})
 
         return Response({"data": serializer.data})
 
@@ -187,5 +202,89 @@ class ProtectedViews(ViewSet):
         return Response({"data": serializer.data["LIKED_BY"]})
 
     @viewException
+    def save_post(self, request):
+        data = request.data
+
+        if not (post_id := data.get("POST_ID", None)):
+            raise APIException("POST_ID is required")
+
+        if not (username := data.get("USERNAME", None)):
+            raise APIException("'USERNAME' is required")
+
+        post = Posts.objects.get(post_id=post_id)
+        user = get_user_model().objects.get(username=username)
+
+        if not user:
+            raise APIException("User not found")
+
+        if not post:
+            raise APIException("Post not found")
+
+        data["username"] = user
+        data["post_id"] = post
+        data["user"] = user
+
+        saved_post = SavedPosts.objects.filter(
+            Q(username=data["username"]) & Q(post_id=post)
+        ).first()
+
+        if not saved_post:
+            SavedPosts.create(request, **data)
+        else:
+            saved_post.state = False if saved_post.state else True
+            SavedPosts.update(request, saved_post)
+
+        return Response({"message": "Post saved successfuly."})
+
+    @viewException
+    def get_saved_posts(self, request):
+        user = request.user
+
+        saved_posts = SavedPosts.objects.filter(
+            Q(username=user.username) & Q(state=True)
+        ).all()
+
+        posts = [post.post_id for post in saved_posts]
+        serializer = PostSerializer(posts, many=True, context={"request": request})
+
+        return Response({"data": serializer.data})
+
+    @viewException
     def update_post(self, request):
         pass
+
+    @viewException
+    def my_posts(self, request):
+        posts = Posts.objects.filter(author=request.user).all()
+        serializer = PostSerializer(posts, many=True, context={"request": request})
+
+        return Response({"data": serializer.data})
+
+    @viewException
+    def block_author(self, request):
+        username = request.data.get("USERNAME", None)
+        author = request.data.get("AUTHOR", None)
+        reason = request.data.get("REASON", None)
+
+        if not username:
+            raise APIException("USERNAME is required")
+
+        if not author:
+            raise APIException("AUTHOR is required")
+
+        if not reason:
+            raise APIException("REAZON is required")
+
+        user = get_user_model().objects.get(username=username)
+
+        if not user:
+            raise APIException("User not found")
+
+        author = get_user_model().objects.get(username=author)
+
+        if not author:
+            raise APIException("Author not found")
+
+        BloquedAuthor.create(request, username=user, author=author, reason=reason)
+
+        return Response({"message": "Author blocked successfuly."})

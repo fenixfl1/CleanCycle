@@ -15,7 +15,7 @@ from rest_framework.permissions import AllowAny, IsAuthenticated
 from recycling.serializers import CitySerializer, RecyclingPointsSerializer
 from users.serializers import LoginUserSerializer
 
-from utils.hlepers import viewException
+from utils.helpers import viewException
 from utils.serializers import PaginationSerializer
 
 from recycling.models import Cities, RecyclesTypes, RecyclingPoints, Routes
@@ -66,6 +66,15 @@ class PublicViewSet(ViewSet):
         points = RecyclingPoints.objects.filter(city=city_id).all()
 
         serializer = RecyclingPointsSerializer(points, many=True)
+
+        return Response({"data": serializer.data})
+
+    @viewException
+    def get_recycling_point_by_id(self, reques, point_id):
+        point = RecyclingPoints.objects.filter(recycle_point_id=point_id).first()
+
+        serializer = RecyclingPointsSerializer(point, data=model_to_dict(point))
+        serializer.is_valid(raise_exception=True)
 
         return Response({"data": serializer.data})
 

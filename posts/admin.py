@@ -1,6 +1,6 @@
 from django.contrib import admin
 
-from posts.models import Posts, Comments
+from posts.models import BloquedAuthor, Posts, Comments, SavedPosts
 from utils.common import BaseModelAdmin
 
 
@@ -20,5 +20,20 @@ class CommentsAdmin(BaseModelAdmin):
         return obj.post_id.title
 
 
+class SavedPostsAdmin(BaseModelAdmin):
+    list_display = ("post", "username")
+    list_editable = ("state",)
+
+    def post(self, obj: SavedPosts):
+        return obj.post_id.title
+
+
+class BloquedAuthorsAdmin(BaseModelAdmin):
+    list_display = ("author", "username")
+    list_editable = ("state",)
+
+
 admin.site.register(Posts, PostsAdmin)
 admin.site.register(Comments, CommentsAdmin)
+admin.site.register(SavedPosts, SavedPostsAdmin)
+admin.site.register(BloquedAuthor, BloquedAuthorsAdmin)

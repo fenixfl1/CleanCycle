@@ -1,3 +1,4 @@
+from datetime import datetime
 from django.contrib.auth import authenticate
 from django.forms.models import model_to_dict
 from rest_framework.exceptions import APIException
@@ -6,10 +7,10 @@ from rest_framework.response import Response
 from rest_framework.authtoken.models import Token
 from rest_framework.authentication import TokenAuthentication
 from rest_framework.permissions import AllowAny, IsAuthenticated
-from users.models import User
-from users.serializers import LoginUserSerializer
+from users.models import Follow, User
+from users.serializers import FollowUserSerializer, LoginUserSerializer, UserSerializer
 
-from utils.hlepers import viewException
+from utils.helpers import viewException
 
 
 class AuthenticationViewSet(ViewSet):
@@ -53,6 +54,7 @@ class AuthenticationViewSet(ViewSet):
             username=username,
             email=email,
             password=password,
+            full_name=request.data.get("FULL_NAME"),
             avatar=request.data.get("AVATAR"),
         )
 
@@ -90,3 +92,83 @@ class AuthenticationViewSet(ViewSet):
             raise APIException("Username already exists")
 
         return Response({"message": "Username is valid!"})
+
+    @viewException
+    def get_user(self, _request, username):
+        user = User.objects.filter(username=username).first()
+
+        if not user:
+            raise APIException("User not found")
+
+        serializer = UserSerializer(user, data=model_to_dict(user))
+        serializer.is_valid(raise_exception=True)
+
+        return Response({"data": serializer.data})
+
+
+class UserViewSet(ViewSet):
+    """
+    User viewset
+    """
+
+    authentication_classes = [TokenAuthentication]
+    permission_classes = [IsAuthenticated]
+
+    @viewException
+    def get_all_users(self, _request):
+        users = User.objects.all()
+
+        serializer = UserSerializer(users, many=True)
+
+        return Response({"data": serializer.data})
+
+    @viewException
+    def follow_user(self, request):
+        username = request.data.get("USERNAME")
+        user = User.objects.filter(username=username).first()
+
+        if not user:
+            raise APIException("User not found")
+
+        # check if user is already following
+        if Follow.objects.filter(follower=request.user, following=user).exists():
+            # undate the follow status
+            Follow.objects.filter(follower=request.user, following=user).update(
+                updated_at=datetime.now(), state=True
+            )
+        else:
+            Follow.objects.create(
+                follower=request.user, following=user, created_at=datetime.now()
+            )
+
+        return Response({"message": f"You are now following {user.username}"})
+
+    @viewException
+    def unfollow_user(self, request, username):
+        user = User.objects.filter(username=username).first()
+
+        if not user:
+            raise APIException("User not found")
+
+        Follow.objects.filter(follower=request.user, following=user).update(
+            updated_at=datetime.now(), state=False
+        )
+
+        return Response({"message": f"You are no longer following {user.username}"})
+
+    @viewException
+    def get_follow(self, request):
+        followers = Follow.objects.filter(follower=request.user, state=True)
+        following = Follow.objects.filter(following=request.user, state=True)
+
+        followers_serializer = FollowUserSerializer(followers, many=True)
+        following_serializer = FollowUserSerializer(following, many=True)
+
+        return Response(
+            {
+                "data": {
+                    "followers": followers_serializer.data,
+                    "following": following_serializer.data,
+                },
+            }
+        )

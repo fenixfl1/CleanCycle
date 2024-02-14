@@ -8,4 +8,5 @@ urlpatterns = [
     path(f"{PATH_BASE}users/", include("users.urls")),
     path(f"{PATH_BASE}posts/", include("posts.urls")),
     path(f"{PATH_BASE}recycling_points/", include("recycling.urls")),
+    path(f"{PATH_BASE}exchanges/", include("exchanges.urls")),
 ]

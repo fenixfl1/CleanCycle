@@ -1,6 +1,6 @@
 from django.db.models import Q
 from rest_framework import serializers
-from utils.hlepers import excep
+from utils.helpers import excep
 from utils.serializers import BaseModelSerializer
 
 from recycling.models import (

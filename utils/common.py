@@ -1,6 +1,7 @@
 """
 This file contains the common models that will be inherited by all other models
 """
+
 from datetime import datetime
 from typing import Type
 
@@ -15,7 +16,7 @@ from django.contrib.admin.sites import AdminSite
 
 from rest_framework.exceptions import APIException
 
-from utils.hlepers import dict_key_to_lower
+from utils.helpers import dict_key_to_lower
 
 Model = Type["Model"]
 
@@ -109,7 +110,7 @@ class BaseModelAdmin(admin.ModelAdmin):
         self.list_editable = self.list_editable + (state_field,)
         super().__init__(model, admin_site)
 
-    def edit_link(self, obj):
+    def edit_link(self, obj) -> str:
         # Generar un enlace a la página de edición del objeto
         if obj.pk:
             url = reverse(

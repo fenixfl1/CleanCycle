@@ -8,6 +8,7 @@ from django.contrib.admin.sites import AdminSite
 
 from recycling.forms import RecyclingPointsForm
 from recycling.models import (
+    RecyclePointGallery,
     RecyclePointType,
     RecyclesTypes,
     RecyclingPoints,
@@ -18,6 +19,7 @@ from recycling.models import (
     Cities,
 )
 from utils.common import BaseModelAdmin
+from posts.models import Images
 
 
 class RecyclesTypesAdmin(BaseModelAdmin):
@@ -127,6 +129,18 @@ class RecyclePointTypeAdmin(BaseModelAdmin):
     list_filter = ("recycle_point", "recycle_type")
 
 
+class RecyclePointGalleryAdmin(BaseModelAdmin):
+    list_display = ("normalize_image", "normalie_recycling_point", "created_by")
+
+
+class ImageAdmin(BaseModelAdmin):
+    list_display = ("normalize_image", "name", "created_by")
+
+
+admin.site.site_header = "Puntos de Reciclaje"
+admin.site.site_title = "Puntos de Reciclaje"
+admin.site.index_title = "Puntos de Reciclaje"
+
 admin.site.register(RecyclesTypes, RecyclesTypesAdmin)
 admin.site.register(RecyclingPoints, RecyclingPointsAdmin)
 admin.site.register(Routes, RoutesAdmin)
@@ -135,3 +149,5 @@ admin.site.register(Schedule, ScheduleAdmin)
 admin.site.register(Reviews, ReviewsAdmin)
 admin.site.register(Cities, CitiesAdmin)
 admin.site.register(RecyclePointType, RecyclePointTypeAdmin)
+admin.site.register(RecyclePointGallery, RecyclePointGalleryAdmin)
+admin.site.register(Images, ImageAdmin)

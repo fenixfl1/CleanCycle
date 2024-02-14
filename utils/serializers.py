@@ -3,7 +3,7 @@ from rest_framework.exceptions import NotFound, APIException
 from rest_framework.response import Response
 from rest_framework import serializers
 
-from utils.hlepers import excep
+from utils.helpers import excep
 
 
 class BaseModelSerializer(serializers.ModelSerializer):

@@ -44,6 +44,7 @@ class User(AbstractBaseUser):
 
     user_id = models.AutoField(primary_key=True)
     email = models.EmailField(unique=True, null=False, blank=False)
+    full_name = models.CharField(max_length=50, null=True, blank=True)
     username = models.CharField(max_length=30, unique=True, null=False, blank=False)
     password = models.CharField(max_length=100, null=False, blank=False)
     avatar = models.TextField(null=True, blank=True)
@@ -88,3 +89,30 @@ class User(AbstractBaseUser):
         db_table = "users"
         ordering = ["username"]
         verbose_name = "User"
+
+
+class Follow(models.Model):
+    follower = models.ForeignKey(
+        User,
+        db_column="follower",
+        on_delete=models.CASCADE,
+        related_name="following",
+        to_field="username",
+    )
+    following = models.ForeignKey(
+        User,
+        db_column="following",
+        on_delete=models.CASCADE,
+        related_name="followers",
+        to_field="username",
+    )
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    state = models.BooleanField(max_length=1, default=True)
+
+    class Meta:
+        db_table = "follows"
+        unique_together = ("follower", "following")
+
+    def __str__(self):
+        return f"{self.follower.username} follows {self.following.username}"

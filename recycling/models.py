@@ -47,7 +47,11 @@ class RecyclingPoints(BaseModel):
     longitude = models.CharField(max_length=100)
     description = models.CharField(max_length=250)
     recycle_types = models.ManyToManyField(RecyclesTypes, through="RecyclePointType")
-    cover = models.TextField(null=True, blank=True)
+    cover = models.TextField(
+        null=True,
+        blank=True,
+        default="https://www.thermaxglobal.com/wp-content/uploads/2020/05/image-not-found.jpg",
+    )
     phone = models.CharField(max_length=15, null=True, blank=True)
     email = models.CharField(max_length=100, null=True, blank=True)
     city = models.ForeignKey(
@@ -76,6 +80,47 @@ class RecyclingPoints(BaseModel):
 
     class Meta:
         db_table = "recycling_points"
+
+
+class RecyclePointGallery(BaseModel):
+    """
+    This model represents the relationship between the images and the recycling points.\n
+    `TABLE NAME:` RECYCLE_POINT_GALLERY
+    """
+
+    image = models.ForeignKey(
+        "posts.Images",
+        db_column="image_id",
+        on_delete=models.CASCADE,
+        related_name="%(class)s_image",
+        to_field="image_id",
+    )
+    recycling_point = models.ForeignKey(
+        RecyclingPoints,
+        db_column="recycle_point_id",
+        on_delete=models.CASCADE,
+        related_name="%(class)s_recycling_point",
+        to_field="recycle_point_id",
+    )
+
+    def __repr__(self) -> str:
+        return f"{self.image.image}"
+
+    def normalize_image(self):
+        if self.image.image:
+            return format_html(
+                f'<img src="{self.image.image}" width="100" height="100" />'
+            )
+        return ""
+
+    def normalie_recycling_point(self):
+        return self.recycling_point.location_name
+
+    normalize_image.short_description = "Image"
+    normalie_recycling_point.short_description = "Recycling Point"
+
+    class Meta:
+        db_table = "recycle_point_gallery"
 
 
 class RecyclePointType(BaseModel):
