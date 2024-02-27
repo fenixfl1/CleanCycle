@@ -2,6 +2,7 @@ from django.contrib import admin
 from exchanges.models import (
     ExchangesItems,
     ExhangeProposal,
+    ImagesXExchangesItems,
     Reactions,
     Tags,
 )
@@ -19,7 +20,7 @@ class ExchangesItemsAdmin(BaseModelAdmin):
         "created_at",
     )
     search_fields = ("item_name", "description", "created_by__username", "tags__name")
-    list_filter = ("item_state", "tags", "created_at", "updated_at")
+    list_filter = ("state", "item_state", "tags", "created_at", "updated_at")
 
     # Método para obtener los tags como cadena
     def get_tags(self, obj):
@@ -52,7 +53,13 @@ class ExhangeProposalAdmin(BaseModelAdmin):
     list_filter = ("state", "created_at")
 
 
+class ImagesXExchangesItemsAdmin(BaseModelAdmin):
+    list_display = ("image_id", "exchange_item_id", "created_by")
+    search_fields = ("image_id", "exchange_item_id", "created_by")
+
+
 admin.site.register(Tags, TagsAdmin)
 admin.site.register(ExchangesItems, ExchangesItemsAdmin)
 admin.site.register(Reactions, ReactionsAdmin)
 admin.site.register(ExhangeProposal, ExhangeProposalAdmin)
+admin.site.register(ImagesXExchangesItems, ImagesXExchangesItemsAdmin)

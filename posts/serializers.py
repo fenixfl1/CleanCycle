@@ -75,3 +75,9 @@ class PostSerializer(BaseModelSerializer):
             "saved",
             "title",
         )
+
+
+class ImageSerializer(BaseModelSerializer):
+    class Meta:
+        model = Images
+        fields = ("image_id", "image", "created_at")
