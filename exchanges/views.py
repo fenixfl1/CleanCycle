@@ -9,7 +9,7 @@ from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.viewsets import ViewSet
 
-from exchanges.models import ExchangesItems, Tags
+from exchanges.models import ExchangesItems, ExhangeProposal, Reactions, Tags
 from exchanges.serializers import ExchangeItemSerializer, TagSerializer
 from posts.models import Images
 from utils.helpers import viewException
@@ -64,6 +64,33 @@ class PublicViewSet(ViewSet):
 
         return Response({"data": serializer.data})
 
+    @viewException
+    def get_exchange_item_proposals(self, request, item_id):
+        """
+        This method return the proposals for the exchange item with the given id
+        """
+        proposals = ExhangeProposal.objects.filter(
+            Q(item_offered=item_id) & Q(state=True)
+        ).all()
+
+        serializer = ExchangeItemSerializer(
+            proposals, many=True, context={"request": request}
+        )
+
+        return Response({"data": serializer.data})
+
+    @viewException
+    def get_tags(self, request):
+        """
+        This method return the tags\n
+        `METHOD`: GET\n
+        """
+        tags = Tags.objects.filter(state=True).all()
+
+        serializer = TagSerializer(tags, many=True)
+
+        return Response({"data": serializer.data})
+
 
 class ProtectedViewSet(ViewSet):
     """
@@ -83,10 +110,6 @@ class ProtectedViewSet(ViewSet):
         data = request.data
         tags = data.pop("TAGS", None)
         images = data.pop("IMAGES", None)
-
-        print("*" * 75)
-        print(f"{images}")
-        print("*" * 75)
 
         if not data.get("ITEM_NAME"):
             raise APIException("Name is required")
@@ -111,8 +134,8 @@ class ProtectedViewSet(ViewSet):
         if images is not None:
 
             for image in images:
-                imagees = Images.create(request, **image)
-                exchange_item.add_images(imagees, request)
+                img = Images.create(request, **image)
+                exchange_item.add_images(img, request)
 
         # Serialize the exchange item and return the response
         serializer = ExchangeItemSerializer(
@@ -165,6 +188,66 @@ class ProtectedViewSet(ViewSet):
         serializer.is_valid(raise_exception=True)
 
         return Response({"data": serializer.data})
+
+    @viewException
+    def add_exchange_item_proposal(self, request):
+        """
+        This method add a proposal to the exchange item with the given id\n
+        `METHOD`: POST\n
+        """
+        data = request.data
+
+        item_id = data.get("ITEM_ID", None)
+        proposal_item_id = data.get("PROPOSAL_ITEM_ID", None)
+
+        exchange_item = ExchangesItems.objects.filter(exchange_item_id=item_id).first()
+
+        if exchange_item is None:
+            raise APIException("The item does not exist")
+
+        proposal = ExhangeProposal.create(request, exchange_item, **data)
+
+        if proposal is None:
+            raise APIException("An error occurred while creating the proposal")
+
+        return Response({"message": "Proposal added successfully"})
+
+    @viewException
+    def react_to_exchange_item(self, request):
+        """
+        This method add a reaction to the exchange item with the given id\n
+        `METHOD`: POST\n
+        """
+
+        data = request.data
+
+        item_id = data.get("ITEM_ID", None)
+        reaction = data.get("REACTION", None)
+
+        exchange_item = ExchangesItems.objects.filter(exchange_item_id=item_id).first()
+
+        if exchange_item is None:
+            raise APIException("The item does not exist")
+
+        # validar si existe una reaccion del usuario al item
+        reaction = Reactions.objects.filter(
+            Q(exchange_item=exchange_item) & Q(created_by=request.user)
+        ).first()
+
+        if reaction is not None:
+            # update the reaction state
+            reaction.state = True if reaction.state == False else False
+            reaction.save()
+
+        else:
+            data["exchange_item"] = exchange_item
+
+            reaction = Reactions.create(request, **data)
+
+            if reaction is None:
+                raise APIException("An error occurred while creating the reaction")
+
+        return Response({"message": "Reaction added successfully"})
 
     @viewException
     def create_tag(self, request):

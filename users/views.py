@@ -10,7 +10,7 @@ from rest_framework.permissions import AllowAny, IsAuthenticated
 from users.models import Follow, User
 from users.serializers import FollowUserSerializer, LoginUserSerializer, UserSerializer
 
-from utils.helpers import viewException
+from utils.helpers import dict_key_to_lower, viewException
 
 
 class AuthenticationViewSet(ViewSet):
@@ -172,3 +172,28 @@ class UserViewSet(ViewSet):
                 },
             }
         )
+
+    @viewException
+    def update_user(self, request):
+        data = request.data
+
+        if not data.get("USER_ID"):
+            raise APIException("User ID is required")
+
+        user = User.objects.filter(user_id=data["USER_ID"]).first()
+
+        if not user:
+            raise APIException("User not found")
+
+        data.pop("USER_ID")
+        data.pop("USERNAME", None)
+
+        for key, value in dict_key_to_lower(data).items():
+            setattr(user, key, value)
+
+        user.save()
+
+        serializer = UserSerializer(user, data=model_to_dict(user))
+        serializer.is_valid(raise_exception=True)
+
+        return Response({"data": serializer.data})

@@ -124,7 +124,9 @@ class ProtectedViews(ViewSet):
 
         post = Posts.create(request, **data)
 
-        serializer = PostSerializer(post, data=model_to_dict(post))
+        serializer = PostSerializer(
+            post, data=model_to_dict(post), context={"request": request}
+        )
         serializer.is_valid(raise_exception=True)
 
         return Response(

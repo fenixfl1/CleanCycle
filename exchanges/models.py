@@ -41,21 +41,20 @@ class ExchangesItems(BaseModel):
         verbose_name = "Exchange Item"
         verbose_name_plural = "Exchange Items"
         ordering = ["-created_at"]
-        
+
     def __str__(self) -> str:
         return self.item_name
-    
+
     def __repr__(self) -> str:
         return self.item_name
-    
-    def add_images(self, images: dict, request) -> None:
+
+    def add_images(self, image: dict, request) -> None:
         """
         This method add images to the exchange item
         """
-        for image in images:
-            ImagesXExchangesItems.objects.create(
-                image_id=image, exchange_item_id=self, created_by=request.user
-            )
+        ImagesXExchangesItems.objects.create(
+            image_id=image, exchange_item_id=self, created_by=request.user
+        )
 
 
 class Reactions(BaseModel):
