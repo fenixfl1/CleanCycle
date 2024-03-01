@@ -1,5 +1,6 @@
 from functools import reduce
 from operator import and_
+from django.contrib.auth import get_user_model
 from django.forms.models import model_to_dict
 from django.db.models import Q
 
@@ -9,9 +10,15 @@ from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.viewsets import ViewSet
 
-from exchanges.models import ExchangesItems, ExhangeProposal, Reactions, Tags
+from exchanges.models import (
+    CommentXExchangesItems,
+    ExchangesItems,
+    ExhangeProposal,
+    Tags,
+)
 from exchanges.serializers import ExchangeItemSerializer, TagSerializer
-from posts.models import Images
+from posts.models import Comments, Images, Likes
+from posts.serializers import CommentsSerializer
 from utils.helpers import viewException
 from utils.serializers import PaginationSerializer
 
@@ -69,15 +76,31 @@ class PublicViewSet(ViewSet):
         """
         This method return the proposals for the exchange item with the given id
         """
-        proposals = ExhangeProposal.objects.filter(
-            Q(item_offered=item_id) & Q(state=True)
-        ).all()
+
+        statement = f"""
+            SELECT * FROM exchanges_items WHERE exchange_item_id IN (
+                SELECT item_offered FROM exchage_proposal WHERE desired_item = {item_id}
+            )
+        """
+
+        items = ExchangesItems.objects.raw(statement)
 
         serializer = ExchangeItemSerializer(
-            proposals, many=True, context={"request": request}
+            items, many=True, context={"request": request}
         )
 
         return Response({"data": serializer.data})
+
+    @viewException
+    def get_exchange_item_likes(self, request, item_id):
+        """
+        This method return the likes for the exchange item with the given id\n
+        `METHOD`: GET\n
+        """
+        item = ExchangesItems.objects.filter(exchange_item_id=item_id).first()
+        likes, count = item.get_likes()
+
+        return Response({"data": {"LIKES": likes, "COUNT": count}})
 
     @viewException
     def get_tags(self, request):
@@ -88,6 +111,23 @@ class PublicViewSet(ViewSet):
         tags = Tags.objects.filter(state=True).all()
 
         serializer = TagSerializer(tags, many=True)
+
+        return Response({"data": serializer.data})
+
+    @viewException
+    def get_exchange_item_comments(self, request, item_id):
+        """
+        This method return the comments for the exchange item width the given id\n
+        `METHOD`: GET\n
+        """
+        data = request.data
+
+        item_comments = CommentXExchangesItems.objects.filter(exchange_item_id=item_id)
+        comments = Comments.objects.filter(
+            comment_id__in=[comment.comment_id.comment_id for comment in item_comments]
+        )
+
+        serializer = CommentsSerializer(comments, many=True)
 
         return Response({"data": serializer.data})
 
@@ -195,59 +235,35 @@ class ProtectedViewSet(ViewSet):
         This method add a proposal to the exchange item with the given id\n
         `METHOD`: POST\n
         """
-        data = request.data
 
-        item_id = data.get("ITEM_ID", None)
-        proposal_item_id = data.get("PROPOSAL_ITEM_ID", None)
+        item_id = request.data.get("ITEM_ID", None)
+        proposal_item_id = request.data.get("PROPOSAL_ITEM_ID", None)
 
-        exchange_item = ExchangesItems.objects.filter(exchange_item_id=item_id).first()
+        if item_id is None:
+            raise APIException("The item id is required")
 
-        if exchange_item is None:
+        if proposal_item_id is None:
+            raise APIException("The proposal item id is required")
+
+        desired_item = ExchangesItems.objects.filter(exchange_item_id=item_id).first()
+        proposal_item = ExchangesItems.objects.filter(
+            exchange_item_id=proposal_item_id
+        ).first()
+
+        if desired_item is None:
             raise APIException("The item does not exist")
 
-        proposal = ExhangeProposal.create(request, exchange_item, **data)
+        if proposal_item is None:
+            raise APIException("The proposal item does not exist")
+
+        proposal = ExhangeProposal.add_proposal(
+            desired_item, proposal_item, request.user
+        )
 
         if proposal is None:
             raise APIException("An error occurred while creating the proposal")
 
         return Response({"message": "Proposal added successfully"})
-
-    @viewException
-    def react_to_exchange_item(self, request):
-        """
-        This method add a reaction to the exchange item with the given id\n
-        `METHOD`: POST\n
-        """
-
-        data = request.data
-
-        item_id = data.get("ITEM_ID", None)
-        reaction = data.get("REACTION", None)
-
-        exchange_item = ExchangesItems.objects.filter(exchange_item_id=item_id).first()
-
-        if exchange_item is None:
-            raise APIException("The item does not exist")
-
-        # validar si existe una reaccion del usuario al item
-        reaction = Reactions.objects.filter(
-            Q(exchange_item=exchange_item) & Q(created_by=request.user)
-        ).first()
-
-        if reaction is not None:
-            # update the reaction state
-            reaction.state = True if reaction.state == False else False
-            reaction.save()
-
-        else:
-            data["exchange_item"] = exchange_item
-
-            reaction = Reactions.create(request, **data)
-
-            if reaction is None:
-                raise APIException("An error occurred while creating the reaction")
-
-        return Response({"message": "Reaction added successfully"})
 
     @viewException
     def create_tag(self, request):
@@ -268,3 +284,60 @@ class ProtectedViewSet(ViewSet):
         serializer.is_valid(raise_exception=True)
 
         return Response({"data": serializer.data})
+
+    @viewException
+    def add_comment_to_exchange_item(self, request):
+        """
+        This method add a comment to the exchange item with the given id\n
+        `METHOD`: POST\n
+        """
+        data = request.data
+        exchange_item = ExchangesItems.objects.filter(
+            exchange_item_id=data.pop("EXCHANGE_ITEM_ID")
+        ).first()
+
+        if exchange_item is None:
+            raise APIException("The item does not exist")
+
+        user = get_user_model().objects.filter(username=data.pop("USERNAME")).first()
+
+        comment = Comments.create(request, **data)
+
+        if comment is None:
+            raise APIException("An error occurred while creating the comment")
+
+        isSaved = CommentXExchangesItems.add_comment(
+            comment=comment, item=exchange_item, user=user
+        )
+
+        if isSaved is False:
+            comment.delete()
+            raise APIException("An error occurred while creating the comment")
+
+        serializer = CommentsSerializer(
+            comment,
+            data=model_to_dict(comment),
+        )
+        serializer.is_valid(raise_exception=True)
+
+        return Response({"data": serializer.data})
+
+    @viewException
+    def like_exchange_item(self, request):
+        """
+        This method add a like to the exchange item with the given id\n
+        `METHOD`: POST\n
+        """
+        item_id = request.data.get("EXCHANGE_ITEM_ID", None)
+
+        exchange_item = ExchangesItems.objects.filter(exchange_item_id=item_id).first()
+
+        if exchange_item is None:
+            raise APIException("The item does not exist")
+
+        like = exchange_item.like_exchange_item(request.user)
+
+        if not like:
+            raise APIException("An error occurred while creating the like")
+
+        return Response({"message": "Reaction added successfully"})

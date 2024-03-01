@@ -1,6 +1,58 @@
 from django.db import models
+from django.contrib.contenttypes.fields import GenericForeignKey
+from django.contrib.contenttypes.models import ContentType
 from utils.common import BaseModel
 from django.utils.html import format_html
+
+
+class Likes(BaseModel):
+    """
+    This model represents the likes table in the database. Likes for posts
+    """
+
+    user = models.ForeignKey(
+        "users.User",
+        on_delete=models.CASCADE,
+        related_name="user_likes",
+        to_field="username",
+        db_column="user",
+    )
+    content_type = models.ForeignKey(
+        ContentType,
+        on_delete=models.CASCADE,
+    )
+    object_id = models.PositiveIntegerField()
+    content_object = GenericForeignKey("content_type", "object_id")
+
+    def __str__(self) -> str:
+        return f"{self.user.username} - {self.content_type.model} - {self.object_id}"
+
+    def __repr__(self) -> str:
+        return f"{self.user.username} - {self.content_type.model} - {self.object_id}"
+
+    def normalize_user(self):
+        return format_html(f"{self.user.username}")
+
+    def normalize_content_type(self):
+        return format_html(f"{self.content_type.model}")
+
+    def normalize_object_id(self):
+        return format_html(f"{self.object_id}")
+
+    normalize_user.short_description = "User"
+    normalize_content_type.short_description = "Content Type"
+    normalize_object_id.short_description = "Object ID"
+
+    class Meta:
+        db_table = "likes"
+        verbose_name = "Like"
+        verbose_name_plural = "Likes"
+        constraints = [
+            models.UniqueConstraint(
+                fields=["content_type", "user", "object_id"],
+                name="unique_like_content_type_object_user",
+            )
+        ]
 
 
 class Posts(BaseModel):
@@ -28,37 +80,54 @@ class Posts(BaseModel):
         verbose_name_plural = "Posts"
         ordering = ["-created_at"]
 
+    def __str__(self) -> str:
+        return f"{self.post_id} - {self.title}"
 
-class Likes(BaseModel):
-    """
-    This model represents the likes table in the database. Likes for posts
-    """
+    def __repr__(self) -> str:
+        return f"{self.post_id} - {self.title}"
 
-    post_id = models.ForeignKey(
-        Posts,
-        db_column="post_id",
-        on_delete=models.CASCADE,
-        related_name="post_likes",
-        to_field="post_id",
-    )
-    username = models.ForeignKey(
-        "users.User",
-        db_column="username",
-        on_delete=models.CASCADE,
-        related_name="user_likes",
-        to_field="username",
-    )
+    def normalize_content(self):
+        return format_html(f"{self.content[:100]}...")
 
-    class Meta:
-        db_table = "likes"
-        verbose_name = "Like"
-        verbose_name_plural = "Likes"
-        constraints = [
-            models.UniqueConstraint(
-                fields=["post_id", "username"],
-                name="unique_like_post_user",
-            )
-        ]
+    def normalize_title(self):
+        return format_html(f"{self.title[:50]}...")
+
+    def normalize_author(self):
+        return format_html(f"{self.author.username}")
+
+    def normalize_front_page(self):
+        return format_html(f"<img src='{self.front_page}' width='100' height='100' />")
+
+    def get_likes(self):
+        """
+        This method return the list of usernames that liked the post and the count of likes
+        """
+        post_content_type = ContentType.objects.get_for_model(self)
+        likes = Likes.objects.filter(
+            content_type=post_content_type, object_id=self.post_id
+        )
+
+        count = likes.count()
+
+        # Obtener la lista de nombres de usuario que dieron like
+        liked_usernames = [like.user.username for like in likes]
+
+        return (liked_usernames, count)
+
+    def like_post(self, user):
+        """
+        This method allows to like a post
+        """
+        post_content_type = ContentType.objects.get_for_model(self)
+        like = Likes.objects.create(
+            user=user, content_type=post_content_type, object_id=self.post_id
+        )
+        return like
+
+    normalize_content.short_description = "Content"
+    normalize_title.short_description = "Title"
+    normalize_author.short_description = "Author"
+    normalize_front_page.short_description = "Front Page"
 
 
 class Comments(BaseModel):
@@ -67,20 +136,6 @@ class Comments(BaseModel):
     """
 
     comment_id = models.AutoField(primary_key=True)
-    post_id = models.ForeignKey(
-        Posts,
-        db_column="post_id",
-        on_delete=models.CASCADE,
-        related_name="article_comments",
-        to_field="post_id",
-    )
-    username = models.ForeignKey(
-        "users.User",
-        db_column="user_id",
-        on_delete=models.CASCADE,
-        related_name="user_comments",
-        to_field="username",
-    )
     comment = models.TextField()
 
     class Meta:
@@ -88,6 +143,49 @@ class Comments(BaseModel):
         verbose_name = "Comment"
         verbose_name_plural = "Comments"
         ordering = ["comment_id"]
+
+
+class CommentXPost(BaseModel):
+    """
+    This model represents the relationship between posts and comments
+    `TABLE`: comment_x_post
+    """
+
+    comment_id = models.ForeignKey(
+        Comments,
+        db_column="comment_id",
+        on_delete=models.CASCADE,
+        related_name="comment_posts",
+        to_field="comment_id",
+    )
+    post_id = models.ForeignKey(
+        Posts,
+        db_column="post_id",
+        on_delete=models.CASCADE,
+        related_name="comment_posts",
+        to_field="post_id",
+    )
+
+    class Meta:
+        db_table = "comment_x_post"
+        verbose_name = "Comment X Post"
+        verbose_name_plural = "Comments X Posts"
+        ordering = ["comment_id"]
+
+    def __str__(self) -> str:
+        return f"{self.comment_id} - {self.post_id}"
+
+    def __repr__(self) -> str:
+        return f"{self.comment_id} - {self.post_id}"
+
+    def normalize_comment(self):
+        return format_html(f"{self.comment_id.comment[:50]}...")
+
+    def normalize_post(self):
+        return format_html(f"{self.post_id.title[:50]}...")
+
+    normalize_comment.short_description = "Comment"
+    normalize_post.short_description = "Post"
 
 
 class Images(BaseModel):

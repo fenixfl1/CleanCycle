@@ -1,11 +1,12 @@
 from django.contrib import admin
 from exchanges.models import (
+    CommentXExchangesItems,
     ExchangesItems,
     ExhangeProposal,
     ImagesXExchangesItems,
-    Reactions,
     Tags,
 )
+from posts.models import Comments
 from utils.common import BaseModelAdmin
 
 
@@ -16,6 +17,8 @@ class ExchangesItemsAdmin(BaseModelAdmin):
         "description",
         "item_owner",
         "item_state",
+        "contact_type",
+        "contact",
         "get_tags",  # Usamos un método en lugar de tags directamente
         "created_at",
     )
@@ -41,15 +44,14 @@ class TagsAdmin(BaseModelAdmin):
     list_filter = ("name", "description")
 
 
-class ReactionsAdmin(BaseModelAdmin):
-    list_display = ("reaction_id", "reaction", "exchange_item")
-    search_fields = ("reaction", "exchange_item")
-    list_filter = ("reaction", "exchange_item")
-
-
 class ExhangeProposalAdmin(BaseModelAdmin):
-    list_display = ("item_offered", "desired_item")
-    search_fields = ("desired_item", "status")
+    list_display = (
+        "normalize_item_offered",
+        "normalize_desired_item",
+        "normalize_proposal_state",
+        "created_at",
+    )
+    search_fields = ("desired_item", "item_offered")
     list_filter = ("state", "created_at")
 
 
@@ -58,8 +60,21 @@ class ImagesXExchangesItemsAdmin(BaseModelAdmin):
     search_fields = ("image_id", "exchange_item_id", "created_by")
 
 
+class CommentXExchangesItemsAdmin(BaseModelAdmin):
+    list_display = (
+        "normalize_comment",
+        "normalize_exchange_item",
+        "created_at",
+        "created_by",
+    )
+    search_fields = ("comment_id", "created_at", "created_by")
+    list_filter = ("created_at",)
+
+    filter_horizontal = ()
+
+
 admin.site.register(Tags, TagsAdmin)
 admin.site.register(ExchangesItems, ExchangesItemsAdmin)
-admin.site.register(Reactions, ReactionsAdmin)
 admin.site.register(ExhangeProposal, ExhangeProposalAdmin)
 admin.site.register(ImagesXExchangesItems, ImagesXExchangesItemsAdmin)
+admin.site.register(CommentXExchangesItems, CommentXExchangesItemsAdmin)

@@ -3,7 +3,13 @@ from django.db.models import Q
 
 from rest_framework import serializers
 
-from posts.models import Posts, Comments, Images, PostImages, Likes, SavedPosts
+from posts.models import (
+    CommentXPost,
+    Posts,
+    Comments,
+    Images,
+    SavedPosts,
+)
 from utils.helpers import excep
 from utils.serializers import BaseModelSerializer
 
@@ -12,18 +18,11 @@ class CommentsSerializer(BaseModelSerializer):
     avatar = serializers.SerializerMethodField()
 
     def get_avatar(self, article: Posts) -> str:
-        return article.username.avatar
+        return article.created_by.avatar
 
     class Meta:
         model = Comments
-        fields = (
-            "comment_id",
-            "post_id",
-            "comment",
-            "username",
-            "avatar",
-            "created_at",
-        )
+        fields = ("comment_id", "comment", "avatar", "created_at", "created_by")
 
 
 class PostSerializer(BaseModelSerializer):
@@ -40,14 +39,11 @@ class PostSerializer(BaseModelSerializer):
 
     @excep
     def get_comments(self, post: Posts) -> list:
-        return Comments.objects.filter(post_id=post.post_id).count()
+        return CommentXPost.objects.filter(post_id=post.post_id).count()
 
     def get_liked_by(self, post: Posts) -> list:
-        likes = Likes.objects.filter(Q(post_id=post.post_id) & Q(state=1)).values_list(
-            "username__username", flat=True
-        )
-
-        return likes
+        likes = post.get_likes()
+        return likes[0]
 
     def get_avatar(self, article: Posts) -> str:
         return article.author.avatar

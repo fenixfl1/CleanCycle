@@ -8,7 +8,6 @@ from exchanges.models import (
     ExchangesItems,
     ExhangeProposal,
     ImagesXExchangesItems,
-    Reactions,
     Tags,
 )
 from posts.models import Images
@@ -24,9 +23,13 @@ class TagSerializer(BaseModelSerializer):
 
 class ExchangeItemSerializer(BaseModelSerializer):
     tags = serializers.SerializerMethodField()
-    reactions = serializers.SerializerMethodField()
     images = serializers.SerializerMethodField()
     avatar = serializers.SerializerMethodField()
+    likes = serializers.SerializerMethodField()
+
+    def get_likes(self, item: ExchangesItems) -> str:
+        likes = item.get_likes()
+        return likes[0]
 
     def get_avatar(self, item: ExchangesItems) -> str:
         return item.created_by.avatar
@@ -47,20 +50,6 @@ class ExchangeItemSerializer(BaseModelSerializer):
 
         return values
 
-    def get_reactions(self, item: ExchangesItems) -> dict:
-        # get the likes and dislikes for the item and return a dict with the count of each and the users that liked or disliked the item
-        likes = Reactions.objects.filter(
-            Q(exchange_item=item.exchange_item_id) & Q(reaction=1)
-        ).values_list("created_by__username", flat=True)
-        dislikes = Reactions.objects.filter(
-            Q(exchange_item=item.exchange_item_id) & Q(reaction=2)
-        ).values_list("created_by__username", flat=True)
-
-        return {
-            "LIKES": {"COUNT": len(likes), "USER": likes},
-            "DISLIKES": {"COUNT": len(dislikes), "USER": dislikes},
-        }
-
     def get_tags(self, item: ExchangesItems) -> list:
         return item.tags.values_list("name", flat=True)
 
@@ -71,9 +60,11 @@ class ExchangeItemSerializer(BaseModelSerializer):
             "created_by",
             "item_name",
             "description",
+            "likes",
             "tags",
-            "reactions",
             "created_at",
             "images",
+            "contact_type",
+            "contact",
             "avatar",
         )
