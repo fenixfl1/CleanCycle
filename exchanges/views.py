@@ -50,18 +50,21 @@ class PublicViewSet(ViewSet):
     @viewException
     def get_exchange_items(self, request):
         """
-        This method return the exchange items\n
+        This method returns the exchange items\n
         `METHOD`: POST\n
         """
 
-        conditions: list[dict] = request.data.get("conditions", None)
+        condition = request.data.get("condition", None)
 
-        if conditions is not None:
-            filter = reduce(
-                and_, [Q(**{key: value}) for key, value in conditions.items()]
-            )
-        else:
-            filter = Q(state=True)
+        if condition is not None:
+            filter_conditions = [
+                Q(**{f"{key}__icontains": value}) for key, value in condition.items()
+            ]
+            # Combina todas las condiciones con operador OR
+            filter = reduce(lambda x, y: x | y, filter_conditions)
+
+        # add state = True to the filter
+        filter = filter & Q(state=True)
 
         exchange_items = ExchangesItems.objects.filter(filter).all()
 
@@ -341,3 +344,20 @@ class ProtectedViewSet(ViewSet):
             raise APIException("An error occurred while creating the like")
 
         return Response({"message": "Reaction added successfully"})
+
+    @viewException
+    def accept_proposal(self, request):
+        """
+        This method accept the proposal with the given id\n
+        `METHOD`: POST\n
+        """
+        proposal_id = request.data.get("PROPOSAL_ID", None)
+
+        proposal = ExhangeProposal.objects.filter(proposal_id=proposal_id).first()
+
+        if proposal is None:
+            raise APIException("The proposal does not exist")
+
+        proposal.accept_proposal(request.user)
+
+        return Response({"message": "Proposal accepted successfully"})

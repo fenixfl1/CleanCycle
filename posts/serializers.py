@@ -10,6 +10,7 @@ from posts.models import (
     Images,
     SavedPosts,
 )
+from users.models import Follow
 from utils.helpers import excep
 from utils.serializers import BaseModelSerializer
 
@@ -31,6 +32,14 @@ class PostSerializer(BaseModelSerializer):
     comments = serializers.SerializerMethodField()
     about_author = serializers.SerializerMethodField()
     saved = serializers.SerializerMethodField()
+    followers = serializers.SerializerMethodField()
+
+    def get_followers(self, post: Posts) -> int:
+        followers = Follow.objects.filter(following=post.created_by).values_list(
+            "follower", flat=True
+        )
+
+        return followers
 
     @excep
     def get_about_author(self, post: Posts) -> str:
@@ -69,6 +78,7 @@ class PostSerializer(BaseModelSerializer):
             "post_id",
             "preview_text",
             "saved",
+            "followers",
             "title",
         )
 

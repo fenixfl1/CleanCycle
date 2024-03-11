@@ -3,7 +3,7 @@ from django.contrib.admin.sites import AdminSite
 from django.utils.translation import gettext_lazy as _
 
 from users.forms import CustomCreationForm, CustomUserChangeForm, UstomAuthForm
-from users.models import User
+from users.models import Follow, User
 from utils.common import BaseModelAdmin
 
 
@@ -67,4 +67,16 @@ class CustomUserAdmin(BaseModelAdmin):
         super().__init__(model, admin_site, state_field)
 
 
+class FollowAdmin(BaseModelAdmin):
+    """
+    Custom follow admin model for the admin site
+    """
+
+    model = User
+    list_display = ("normalize_follower", "normalize_following", "created_at")
+    list_filter = ("created_at",)
+    search_fields = ("follower", "following", "created_at")
+
+
 admin.site.register(User, CustomUserAdmin)
+admin.site.register(Follow, FollowAdmin)

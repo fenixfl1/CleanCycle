@@ -116,3 +116,19 @@ class Follow(models.Model):
 
     def __str__(self):
         return f"{self.follower.username} follows {self.following.username}"
+
+    def __repr__(self):
+        return f"{self.follower.username} follows {self.following.username}"
+
+    def normalize_state(self):
+        return "Following" if self.state else "Not following"
+
+    def normalize_follower(self):
+        return format_html(f"{self.follower.username}")
+
+    def normalize_following(self):
+        return format_html(f"{self.following.username}")
+
+    normalize_state.short_description = "State"
+    normalize_follower.short_description = "Follower"
+    normalize_following.short_description = "Following"

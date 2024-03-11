@@ -26,6 +26,10 @@ class ExchangeItemSerializer(BaseModelSerializer):
     images = serializers.SerializerMethodField()
     avatar = serializers.SerializerMethodField()
     likes = serializers.SerializerMethodField()
+    comment_count = serializers.SerializerMethodField()
+
+    def get_comment_count(self, item: ExchangesItems) -> int:
+        return item.exchange_item_comment.count()
 
     def get_likes(self, item: ExchangesItems) -> str:
         likes = item.get_likes()
@@ -66,5 +70,6 @@ class ExchangeItemSerializer(BaseModelSerializer):
             "images",
             "contact_type",
             "contact",
+            "comment_count",
             "avatar",
         )

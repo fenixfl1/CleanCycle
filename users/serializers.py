@@ -1,12 +1,12 @@
 import datetime
-
+from django.db.models import Q
 from rest_framework import serializers
 from posts.models import Posts
 from utils.helpers import excep
 from utils.serializers import BaseModelSerializer
 from rest_framework.authtoken.models import Token
 
-from users.models import User
+from users.models import Follow, User
 
 
 class UserSerializer(BaseModelSerializer):
@@ -15,10 +15,16 @@ class UserSerializer(BaseModelSerializer):
     posts = serializers.SerializerMethodField()
 
     def get_followers(self, user: User) -> list[str]:
-        return [follower.username for follower in user.followers.all()]
+        followers = Follow.objects.filter(
+            Q(following=user) & Q(state=True)
+        ).values_list("follower", flat=True)
+        return followers
 
     def get_following(self, user: User) -> list[str]:
-        return [following.username for following in user.following.all()]
+        following = Follow.objects.filter(Q(follower=user) & Q(state=True)).values_list(
+            "following", flat=True
+        )
+        return following
 
     def get_posts(self, user: User) -> list[str]:
         return [post.title for post in Posts.objects.filter(author=user.username)]
@@ -40,10 +46,56 @@ class UserSerializer(BaseModelSerializer):
 
 
 class FollowUserSerializer(BaseModelSerializer):
+    username = serializers.SerializerMethodField()
+    avatar = serializers.SerializerMethodField()
+    full_name = serializers.SerializerMethodField()
+    user_id = serializers.SerializerMethodField()
+
+    def get_user_id(self, user: Follow) -> str:
+        return user.follower.user_id
+
+    def get_full_name(self, user: Follow) -> str:
+        return user.follower.full_name
+
+    def get_username(self, user: Follow) -> str:
+        return user.follower.username
+
+    def get_avatar(self, user: Follow) -> str:
+        return user.following.avatar
+
     class Meta:
-        model = User
+        model = Follow
         fields = (
             "user_id",
+            "full_name",
+            "username",
+            "avatar",
+        )
+
+
+class FollowersSerializer(BaseModelSerializer):
+    username = serializers.SerializerMethodField()
+    avatar = serializers.SerializerMethodField()
+    full_name = serializers.SerializerMethodField()
+    user_id = serializers.SerializerMethodField()
+
+    def get_user_id(self, user: Follow) -> str:
+        return user.following.user_id
+
+    def get_full_name(self, user: Follow) -> str:
+        return user.following.full_name
+
+    def get_username(self, user: Follow) -> str:
+        return user.following.username
+
+    def get_avatar(self, user: Follow) -> str:
+        return user.following.avatar
+
+    class Meta:
+        model = Follow
+        fields = (
+            "user_id",
+            "full_name",
             "username",
             "avatar",
         )

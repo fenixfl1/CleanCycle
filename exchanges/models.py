@@ -47,6 +47,11 @@ class ExchangesItems(BaseModel):
     item_state = models.IntegerField(
         null=True, blank=False, default=3, choices=ITEM_STATE_CHOICES
     )
+    exchange_item_comment = models.ManyToManyField(
+        "posts.Comments",
+        through="CommentXExchangesItems",
+        related_name="exchange_item_comment",
+    )
 
     class Meta:
         db_table = "exchanges_items"
@@ -124,7 +129,7 @@ class CommentXExchangesItems(BaseModel):
         "posts.Comments",
         db_column="comment_id",
         on_delete=models.CASCADE,
-        related_name="exchange_item_comment",
+        related_name="exchange_comment_relations",
         to_field="comment_id",
     )
 
@@ -132,7 +137,7 @@ class CommentXExchangesItems(BaseModel):
         ExchangesItems,
         db_column="exchange_item_id",
         on_delete=models.CASCADE,
-        related_name="exchange_item_comment",
+        related_name="exchange_comment_relations",
         to_field="exchange_item_id",
     )
 
@@ -207,6 +212,14 @@ class ExhangeProposal(BaseModel):
 
     def __repr__(self) -> str:
         return f"{self.item_offered} - {self.desired_item}"
+
+    def accept_proposal(self) -> bool:
+        """
+        This method accept the proposal
+        """
+        self.proposal_state = True
+        self.save()
+        return True
 
     def normalize_item_offered(self) -> str:
         return format_html(f"{self.item_offered.item_name[:50]}...")
