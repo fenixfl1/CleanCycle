@@ -138,6 +138,12 @@ class ProtectedViews(ViewSet):
 
     @viewException
     def comment_post(self, request):
+        """
+        This method is used to comment a post\n
+        `param: POST_ID` is required, it is the id of the post\n
+        `param: USERNAME` is required, it is the username of the user\n
+        `param: COMMENT` is required, it is the comment to be added\n
+        """
         data = request.data
 
         if not (username := data.get("USERNAME", None)):
